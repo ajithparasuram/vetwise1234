@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#112b73" />
+<title>VetWise — Doctor Portal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+:root{font-family:'DM Sans',sans-serif;color:#14203b;background:#f7f8fb;font-synthesis:none;text-rendering:optimizeLegibility}*{box-sizing:border-box}body{margin:0;min-width:320px}button,input,textarea{font:inherit}button{cursor:pointer;border:0;background:none;color:inherit}
+.app-shell{min-height:100vh;background:#f7f8fb}
+.sidebar{position:fixed;z-index:10;inset:0 auto 0 0;width:224px;background:#112b73;color:#d6e0ff;display:flex;flex-direction:column}
+.brand{height:58px;padding:0 18px;display:flex;align-items:center;gap:10px;color:#fff;font-family:Manrope;font-size:18px;font-weight:800;border-bottom:1px solid #294486}
+.brand-mark{width:28px;height:28px;border-radius:6px;background:#5169a7;display:grid;place-items:center;color:#fff}
+.brand-mark svg{width:18px;height:18px}
+.portal-label{font-size:10px;letter-spacing:1.2px;font-weight:700;color:#8ea5e0;padding:24px 16px 13px}
+.sidebar nav{display:flex;flex-direction:column;gap:3px;padding:0 7px}
+.nav-item{display:flex;align-items:center;gap:13px;color:#cbd7fb;text-align:left;padding:11px 10px;border-radius:6px;font-size:14px;font-weight:600;transition:.2s;width:100%}
+.nav-item:hover,.nav-item.active{background:#425994;color:#fff}
+.nav-item svg{width:17px;height:17px;flex:none}
+.sidebar-bottom{margin-top:auto;border-top:1px solid #294486;padding:14px 10px 16px}
+.user-mini{display:flex;align-items:center;gap:10px;font-size:11px;color:#c6d2f7;margin-bottom:16px}
+.signout{display:flex;gap:10px;align-items:center;font-size:13px;color:#a9b9ed}
+.signout svg{width:15px;height:15px}
+.avatar{width:36px;height:36px;background:#e9edf5;color:#133174;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.avatar.small{width:27px;height:27px;background:#4964a7;color:#fff}
+.avatar.large{width:46px;height:46px;font-size:17px}
+.main-area{margin-left:224px;min-height:100vh}
+.topbar{height:52px;background:#fff;border-bottom:1px solid #e1e5eb;display:flex;justify-content:space-between;align-items:center;padding:0 18px;color:#60708b;font-size:12px}
+.top-actions{display:flex;gap:15px;align-items:center}
+.icon-btn{position:relative;display:grid;place-items:center;padding:4px;color:#243755}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn b{position:absolute;top:-2px;right:-4px;background:#ef4444;color:#fff;font-size:9px;width:15px;height:15px;border-radius:50%;display:grid;place-items:center}
+.profile-btn{display:flex;align-items:center;gap:8px}
+.profile-btn span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#112b73;color:white;font-weight:700}
+.profile-btn svg{width:14px;height:14px}
+.mobile-menu,.scrim{display:none}
+.page-wrap{max-width:1260px;padding:28px 26px 60px;margin:auto}
+.page-heading{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:12px}
+.page-heading h1{font-family:Manrope;margin:0;font-size:21px;letter-spacing:-.35px}
+.page-heading p{margin:4px 0 0;color:#73809a;font-size:13px}
+.primary,.secondary{display:inline-flex;gap:8px;align-items:center;justify-content:center;border-radius:6px;padding:10px 14px;font-size:13px;font-weight:700;transition:.2s}
+.primary{background:#112b73;color:#fff}
+.primary:hover{background:#24458f;transform:translateY(-1px)}
+.secondary{background:#fff;border:1px solid #dce2eb;color:#1b366f}
+.primary svg,.secondary svg{width:16px;height:16px}
+.searchbar{height:38px;display:flex;align-items:center;gap:9px;padding:0 12px;border:1px solid #dfe4ec;border-radius:7px;background:#fff;color:#9aa7bc}
+.searchbar svg{width:17px;height:17px;flex:none}
+.searchbar input{border:0;outline:0;flex:1;color:#263a5f;font-size:13px;background:none}
+.searchbar input::placeholder{color:#a6b0c1}
+.searchbar button svg{width:14px;height:14px}
+.clients-layout,.patients-layout{display:grid;grid-template-columns:1fr 1.1fr;gap:16px}
+.list-column,.patient-list{min-width:0}
+.client-list,.patient-list{display:flex;flex-direction:column;gap:8px}
+.client-list{margin-top:14px}
+.client-card,.patient-card{display:flex;align-items:center;text-align:left;gap:12px;background:#fff;border:1px solid #dfe4eb;border-radius:7px;padding:12px;min-height:76px;box-shadow:0 1px 1px #1d31520a;transition:.2s;width:100%}
+.client-card:hover,.client-card.selected,.patient-card:hover{border-color:#193b89;box-shadow:0 2px 8px #233c7020}
+.card-main{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.card-main strong{color:#142849;font-size:14px}
+.card-main span{font-size:12px;color:#53627b}
+.card-main small,.last-visit small,.owner small{color:#97a2b5;font-size:11px}
+.last-visit{display:flex;flex-direction:column;align-items:flex-end;gap:3px;color:#304872;font-size:12px}
+.detail-card,.empty-detail,.panel,.table-card,.follow-card,.appointment-card{background:#fff;border:1px solid #dfe4eb;border-radius:7px}
+.detail-card{min-height:310px}
+.detail-head{display:flex;align-items:center;gap:12px;padding:19px 18px;border-bottom:1px solid #edf0f4}
+.detail-head h2{margin:0;font-family:Manrope;font-size:17px}
+.detail-head p{margin:4px 0 0;color:#79869c;font-size:12px}
+.tabs{display:flex;gap:5px;padding:12px 18px;border-bottom:1px solid #edf0f4}
+.tabs button{padding:7px 12px;border-radius:6px;color:#6c7890;font-size:12px;font-weight:600}
+.tabs button.active{background:#112b73;color:white}
+.detail-content{padding:17px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;border-bottom:1px solid #edf0f4;padding-bottom:19px}
+.info-grid .wide{grid-column:1/-1}
+.info-grid label,.eyebrow{display:block;color:#8290a9;font-size:10px;font-weight:700;letter-spacing:.8px;margin-bottom:6px}
+.info-grid strong{font-size:13px;font-weight:500;color:#243b62}
+.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.stat{background:#fff;border:1px solid #dfe4eb;border-radius:7px;padding:16px 17px;display:flex;flex-direction:column;gap:5px}
+.stat strong{font-family:Manrope;font-size:21px;color:#152847}
+.stat span{color:#8290a2;font-size:12px}
+.stat.green strong{color:#0b9b55}
+.stat.orange strong{color:#dd8400}
+.stat.red strong{color:#e02828}
+.stat.blue strong{color:#3471da}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stats-row.four{grid-template-columns:repeat(4,1fr)}
+.filter-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.filter-row .searchbar{flex:1}
+.species-pills{display:flex;gap:5px}
+.species-pills button,.view-toggle button{border:1px solid #dfe4eb;background:#fff;border-radius:6px;padding:9px 11px;font-size:12px;color:#5a6b87;white-space:nowrap}
+.species-pills button.active,.view-toggle button.active{background:#112b73;color:#fff;border-color:#112b73}
+.patient-card{min-height:72px}
+.pet-icon{width:37px;height:37px;border-radius:50%;background:#f2f4f7;color:#78849a;display:grid;place-items:center;flex:none}
+.pet-icon svg{width:19px;height:19px}
+.patient-card .owner{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:155px}
+.owner strong{font-size:12px;color:#243b62}
+.tag{font-style:normal;font-size:9px;padding:3px 6px;border-radius:10px;margin-left:5px}
+.tag.dog{background:#fff2da;color:#cc7c00}
+.tag.cat{background:#eee9ff;color:#7355bc}
+.tag.cattle{background:#e4f8ec;color:#159453}
+.tag.horse{background:#f2e7df;color:#9b6042}
+.tag.goat{background:#e8f8f5;color:#168f7f}
+.tag.rabbit{background:#ffe8f2;color:#d64c84}
+.muted{color:#9aa6b8;font-size:11px}
+.empty-detail{display:grid;place-items:center;align-content:center;gap:8px;min-height:124px;color:#a4aebe;font-size:13px}
+.empty-detail p{margin:0}
+.empty-detail svg{width:34px;height:34px}
+.table-card{overflow:hidden}
+.table-head,.table-row{display:grid;grid-template-columns:1.15fr 2fr .75fr 1fr .8fr .65fr;align-items:center;gap:12px;padding:12px 16px}
+.table-head{background:#fbfcfd;color:#8290a5;font-size:10px;font-weight:700;letter-spacing:.5px}
+.table-row{min-height:70px;border-top:1px solid #eef1f5;font-size:12px;color:#4e607a}
+.table-row strong{color:#162b4d;font-size:13px}
+.table-row div{display:flex;flex-direction:column;gap:3px}
+.table-row small{color:#99a5b6;font-size:10px}
+.status{font-size:9px;font-style:normal;font-weight:800;letter-spacing:.3px;border-radius:10px;padding:4px 7px;width:max-content}
+.paid,.confirmed{color:#079653;background:#ebfff4;border:1px solid #b8efd2}
+.pending{color:#3575da;background:#edf5ff;border:1px solid #c7ddff}
+.overdue{color:#e73535;background:#fff0f0;border:1px solid #ffc7c7}
+.link{display:inline-flex;align-items:center;gap:4px;color:#1c438b;font-size:12px;font-weight:600}
+.link svg{width:13px;height:13px}
+.follow-list{display:flex;flex-direction:column;gap:9px}
+.follow-card{padding:17px 18px;display:flex;gap:14px}
+.follow-card>div:nth-child(2){flex:1}
+.follow-card strong{font-size:14px}
+.follow-card strong small{font-size:12px;color:#75849a;font-weight:500}
+.follow-card p{margin:5px 0;color:#364d71;font-size:12px}
+.follow-card>div>small{color:#99a5b7;font-size:10px}
+.dot{color:#b8c0cc;margin:0 3px}
+.follow-actions{align-self:flex-end;display:flex;gap:14px}
+.appointment-toolbar{display:flex;justify-content:space-between;margin-bottom:14px}
+.date-switch,.view-toggle{display:flex;align-items:center;gap:9px}
+.date-switch button{font-size:20px;color:#77849a}
+.date-switch strong{font-size:14px}
+.view-toggle{gap:0}
+.view-toggle button{border-radius:0}
+.view-toggle button:first-child{border-radius:6px 0 0 6px}
+.view-toggle button:last-child{border-radius:0 6px 6px 0;margin-left:-1px}
+.appointment-list{display:flex;flex-direction:column;gap:8px}
+.appointment-card{display:flex;align-items:center;gap:15px;padding:14px 17px}
+.time{width:78px;font-size:13px;font-weight:700;color:#1b355d}
+.time small{display:block;color:#9ca8b8;font-size:10px;font-weight:400;margin-top:3px}
+.appointment-card>div:nth-child(3){display:flex;flex-direction:column;gap:3px;flex:1}
+.appointment-card>div:nth-child(3) span,.appointment-card>div:nth-child(3) small{font-size:12px;color:#71809a}
+.more{color:#8290a4}
+.more svg{width:19px;height:19px}
+.dashboard .welcome{background:#eaf1ff;border:1px solid #d3e1ff;border-radius:8px;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}
+.welcome h2{font-family:Manrope;font-size:19px;margin:0;color:#132f65}
+.welcome .eyebrow{color:#4365a3;margin-bottom:7px}
+.dashboard-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:16px}
+.panel{padding:18px}
+.panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.panel-title h3{font-family:Manrope;font-size:15px;margin:0}
+.simple-row{display:flex;align-items:center;gap:11px;border-top:1px solid #edf0f4;padding:12px 0}
+.simple-row>div:nth-child(2){display:flex;flex-direction:column;flex:1;gap:3px}
+.simple-row strong{font-size:12px}
+.simple-row small{font-size:11px;color:#8491a5}
+.quick-action{display:flex;align-items:center;gap:10px;width:100%;padding:13px 0;border-top:1px solid #edf0f4;color:#3d5881;font-size:12px;text-align:left}
+.quick-action svg{width:16px;height:16px}
+.quick-action svg:last-child{margin-left:auto;width:14px;height:14px}
+.generic-page{min-height:400px;display:grid;place-items:center}
+.empty-state{text-align:center;color:#8290a6}
+.empty-state h3{color:#253b5c;margin:12px 0 6px;font-family:Manrope}
+.empty-state p{font-size:13px;max-width:360px;line-height:1.5;margin:0 auto 17px}
+.empty-state>svg{color:#a5b0c0;width:40px;height:40px}
+.empty-icon svg{width:27px;height:27px}
+.modal-backdrop{position:fixed;inset:0;background:#10244d66;display:grid;place-items:center;z-index:50;padding:18px}
+.modal{background:#fff;width:min(500px,100%);border-radius:10px;box-shadow:0 18px 55px #091b3a35;padding:22px}
+.modal-head{display:flex;justify-content:space-between}
+.modal-head h2{margin:0;font-family:Manrope;font-size:19px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.form-grid label{font-size:11px;color:#687993;font-weight:700}
+.form-grid label:last-child{grid-column:1/-1}
+.form-grid input,.form-grid textarea{display:block;width:100%;border:1px solid #dce3ed;border-radius:6px;padding:10px;margin-top:6px;outline:0;font-size:13px;color:#263b60}
+.form-grid textarea{min-height:75px;resize:vertical}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px}
+@media(max-width:980px){.sidebar{width:205px}.main-area{margin-left:205px}.clients-layout,.patients-layout{grid-template-columns:1fr}.detail-card,.empty-detail{min-height:280px}.patients-layout .empty-detail{display:none}.filter-row{flex-wrap:wrap}.filter-row .searchbar{min-width:100%}.dashboard-grid{grid-template-columns:1fr}.table-card{overflow-x:auto}.table-head,.table-row{min-width:800px}}
+@media(max-width:680px){.sidebar{transform:translateX(-100%);transition:.22s;width:250px;box-shadow:12px 0 30px #091b3a40}.sidebar.open{transform:translateX(0)}.scrim{display:block;position:fixed;z-index:9;inset:0;background:#07163180}.main-area{margin-left:0}.mobile-menu{display:grid;place-items:center;color:#18366e}.mobile-menu svg{width:20px;height:20px}.topbar{padding:0 14px}.date{margin-right:auto;margin-left:12px}.page-wrap{padding:22px 14px 45px}.page-heading{gap:12px}.heading-actions .primary{padding:9px 10px;font-size:11px}.stats-row,.stats-row.four{grid-template-columns:1fr 1fr}.stat{padding:13px}.stat strong{font-size:18px}.client-card{min-height:71px}.last-visit{display:none}.detail-card{min-height:0}.tabs{overflow:auto}.tabs button{white-space:nowrap}.info-grid{grid-template-columns:1fr}.info-grid .wide{grid-column:auto}.patient-card .owner{display:none}.appointment-card{gap:10px;padding:12px}.appointment-card .status{display:none}.time{width:62px;font-size:11px}.follow-card{padding:14px;flex-wrap:wrap}.follow-actions{width:100%;padding-top:10px;border-top:1px solid #edf0f4}.dashboard .welcome{display:block;padding:18px}.welcome .primary{margin-top:16px}.form-grid{grid-template-columns:1fr}.form-grid label:last-child{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark" id="brandIcon"></div><span>VetWise</span></div>
+    <div class="portal-label" id="portalLabel">DOCTOR PORTAL</div>
+    <nav id="nav"></nav>
+    <div class="sidebar-bottom">
+      <div class="user-mini"><div class="avatar small" id="userAvatar">D</div><span id="userName">Veterinarian</span></div>
+      <button class="signout" onclick="location.href='login.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" onclick="closeMobile()"></div>
+  <main class="main-area">
+    <header class="topbar">
+      <button class="mobile-menu" onclick="openMobile()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+      <span class="date">Sun, 27 Sept, 2026</span>
+      <div class="top-actions">
+        <button class="icon-btn" onclick="navigate('Notifications')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b>1</b></button>
+        <button class="profile-btn" onclick="navigate('Settings')"><span>D</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      </div>
+    </header>
+    <div class="page-wrap">
+      <div class="page-heading">
+        <div><h1 id="pageTitle">Clients</h1><p id="pageSubtitle">5 registered clients</p></div>
+        <div class="heading-actions" id="headingActions"></div>
+      </div>
+      <div id="content"></div>
+    </div>
+  </main>
+  <div id="modalContainer"></div>
+</div>
+<script>
+(function(){
+// ── Config ──
+var ROLE='doctor',PORTAL_LABEL='DOCTOR PORTAL',USER_NAME='Veterinarian',USER_INITIAL='D',PROFILE_INITIAL='D';
+var nav=[
+  {label:'Dashboard',icon:'dashboard'},{label:'Appointments',icon:'calendar'},
+  {label:'Clients',icon:'users'},{label:'Patients',icon:'pawprint'},
+  {label:'Clinical Records',icon:'filetext'},{label:'Prescriptions',icon:'clipboard'},
+  {label:'Payments',icon:'dollar'},{label:'Follow-ups',icon:'clock'},
+  {label:'Notifications',icon:'bell'},{label:'Schedule',icon:'calendar'},
+  {label:'Settings',icon:'settings'}
+];
+// ── Icons ──
+var IC={
+  stethoscope:'<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 1.5 3.96L5 14.5V20a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5.5l1.5-.54A6 6 0 0 0 22 9V5a2 2 0 0 0-2-2h-1"/><path d="M5 6a6 6 0 0 1 6 6"/>',
+  dashboard:'<rect width="7" height="9" x="1" y="1" rx="1"/><rect width="7" height="5" x="1" y="12" rx="1"/><rect width="7" height="9" x="14" y="1" rx="1"/><rect width="7" height="5" x="14" y="12" rx="1"/>',
+  calendar:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  pawprint:'<circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="4" cy="8" r="2"/><circle cx="11" cy="12" r="2"/><path d="M5 10v.5A6 6 0 0 0 11 16a6 6 0 0 0 6-5.5V10"/>',
+  filetext:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+  clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+  dollar:'<circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M15 9.5a2.5 2.5 0 0 0-3-2.5c-1.5 0-3 1.5-3 3.5s1.5 3 3 3 3 1.5 3 3-1.5 3.5-3 3.5a2.5 2.5 0 0 1-3-2.5"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  settings:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  creditcard:'<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+  shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  more:'<circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  arrowup:'<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+  activity:'<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>'
+};
+function svg(name,size){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:'+(size||16)+'px;height:'+(size||16)+'px">'+(IC[name]||'')+'</svg>';}
+// ── Data ──
+var clients=[
+  {name:'Priya Sharma',city:'Mumbai, Maharashtra',pets:'Bruno · Whiskers',last:'15 Sept 2026',initials:'P'},
+  {name:'Ramesh Patel',city:'New Delhi, Delhi',pets:'Nandi · Kali',last:'—',initials:'R'},
+  {name:'Suresh Kumar',city:'Bengaluru, Karnataka',pets:'Raja · Max',last:'—',initials:'S'},
+  {name:'Anita Desai',city:'Pune, Maharashtra',pets:'Chotu',last:'—',initials:'A'},
+  {name:'Vikram Singh',city:'Jaipur, Rajasthan',pets:'Snowy',last:'—',initials:'V'}
+];
+var patients=[
+  ['Bruno','Dog','Labrador Retriever · Golden','3y 2m · 28.5 kg','Priya Sharma','2 visits'],
+  ['Whiskers','Cat','Persian · White & Grey','2y 8m · 4.2 kg','Priya Sharma','1 visit'],
+  ['Nandi','Cattle','Gir · Brown & White','5y 0m · 380 kg','Ramesh Patel','0 visits'],
+  ['Kali','Cattle','Murrah Buffalo · Black','4y 6m · 450 kg','Ramesh Patel','0 visits'],
+  ['Raja','Horse','Marwari · Bay (Brown with black mane)','7y 3m · 480 kg','Suresh Kumar','0 visits'],
+  ['Chotu','Goat','Beetal · Black & White','1y 4m · 18 kg','Anita Desai','0 visits'],
+  ['Snowy','Rabbit','Angora · White','10m · 2.1 kg','Vikram Singh','0 visits']
+];
+var payments=[
+  ['Priya Sharma','Gold Plan — Annual Subscription','₹12,000','1 Jan 2026','UPI'],
+  ['Priya Sharma','Home Visit — Bruno (Vaccination)','₹800','15 Sept 2026','Card'],
+  ['Priya Sharma','Home Visit — Whiskers (Skin Infection)','₹1,200','2 Sept 2026','UPI'],
+  ['Ramesh Patel','Silver Plan — 6 Month Subscription','₹6,500','1 Apr 2026','Net Banking'],
+  ['Suresh Kumar','Platinum Plan — Annual Subscription','₹22,000','1 Jul 2026','UPI']
+];
+// ── State ──
+var state={page:'Clients',query:'',selectedClient:0,modal:null,mobileOpen:false};
+// ── Helpers ──
+function filteredClients(){return clients.filter(function(c){return (c.name+' '+c.city+' '+c.pets).toLowerCase().indexOf(state.query.toLowerCase())>=0;});}
+function subtitle(page){
+  var m={Dashboard:'Your practice at a glance',Clients:'5 registered clients',Patients:'8 patients across 5 clients',Payments:'Payment records for your services','Follow-ups':'Track patients requiring follow-up visits',Appointments:'Manage upcoming appointments','Clinical Records':'Patient history and consultation notes',Prescriptions:'Manage medicines and digital prescriptions',Notifications:'Stay updated with your practice',Schedule:'Your working calendar'};
+  return m[page]||'Manage your VetWise account';
+}
+// ── Render ──
+function renderSidebar(){
+  document.getElementById('brandIcon').innerHTML=svg('stethoscope',18);
+  document.getElementById('portalLabel').textContent=PORTAL_LABEL;
+  document.getElementById('userAvatar').textContent=USER_INITIAL;
+  document.getElementById('userName').textContent=USER_NAME;
+  var nh='';
+  nav.forEach(function(n){
+    nh+='<button class="nav-item'+(state.page===n.label?' active':'')+'" onclick="navigate(\''+n.label+'\')">'+svg(n.icon,17)+'<span>'+n.label+'</span></button>';
+  });
+  document.getElementById('nav').innerHTML=nh;
+}
+function renderHeading(){
+  var t=state.page==='My Pets'?'My Pets':state.page;
+  document.getElementById('pageTitle').textContent=t;
+  document.getElementById('pageSubtitle').textContent=subtitle(state.page);
+  var ha=document.getElementById('headingActions');
+  var addPages=['Clients','Patients','Appointments','Prescriptions'];
+  if(addPages.indexOf(state.page)>=0){
+    var label=state.page==='Appointments'?'Appointment':state.page.slice(0,-1);
+    ha.innerHTML='<button class="primary" onclick="openModal(\'Add '+label+'\')">'+svg('plus',16)+' Add '+label+'</button>';
+  } else{ha.innerHTML='';}
+}
+function renderContent(){
+  var c=document.getElementById('content');
+  var p=state.page;
+  if(p==='Clients')c.innerHTML=renderClients();
+  else if(p==='Patients'||p==='My Pets')c.innerHTML=renderPatients();
+  else if(p==='Payments')c.innerHTML=renderPayments();
+  else if(p==='Follow-ups')c.innerHTML=renderFollowups();
+  else if(p==='Appointments'||p==='Visits'||p==='Schedule')c.innerHTML=renderAppointments();
+  else if(p==='Dashboard')c.innerHTML=renderDashboard();
+  else c.innerHTML=renderGeneric(p);
+}
+function renderClients(){
+  var fc=filteredClients();
+  var cl=fc.map(function(c,i){
+    return '<button class="client-card'+(state.selectedClient===i?' selected':'')+'" onclick="selectClient('+i+')"><div class="avatar">'+c.initials+'</div><div class="card-main"><strong>'+c.name+'</strong><span>'+c.city+'</span><small>'+c.pets+'</small></div><div class="last-visit"><small>Last visit</small><span>'+c.last+'</span></div></button>';
+  }).join('');
+  var sc=fc[state.selectedClient]||clients[0];
+  return '<div class="clients-layout"><div class="list-column"><div class="searchbar">'+svg('search',17)+'<input id="clientSearch" value="'+state.query+'" placeholder="Search by name, phone, email, pet name, species..." oninput="onSearch(this.value)">'+(state.query?'<button onclick="onSearch(\'\')">'+svg('x',14)+'</button>':'')+'</div><div class="client-list">'+cl+'</div></div>'+renderClientDetail(sc)+'</div>';
+}
+function renderClientDetail(c){
+  return '<section class="detail-card"><div class="detail-head"><div class="avatar large">'+c.initials+'</div><div><h2>'+c.name+'</h2><p>'+c.city+' · Joined Mar 2025</p></div></div><div class="tabs"><button class="active">Profile</button><button>Pets (2)</button><button>Visits (5)</button><button>Rx (3)</button><button>Payments (3)</button></div><div class="detail-content"><div class="info-grid"><div><label>PHONE</label><strong>+91 9876543210</strong></div><div><label>EMAIL</label><strong>priya@demo.com</strong></div><div class="wide"><label>ADDRESS</label><strong>12 MG Road, Bandra West, Mumbai, Maharashtra — 400050</strong></div></div><div class="mini-stats">'+stat('2','Pets')+stat('3','Visits')+stat('27 Sept 2026','Next Visit')+'</div></div></section>';
+}
+function renderPatients(){
+  var pl=patients.map(function(p){
+    return '<button class="patient-card"><div class="pet-icon">'+svg('pawprint',19)+'</div><div class="card-main"><strong>'+p[0]+' <em class="tag '+p[1].toLowerCase()+'">'+p[1]+'</em><span class="muted"> '+(p[1]==='Dog'?'Male':'Female')+'</span></strong><span>'+p[2]+'</span><small>'+p[3]+'</small></div><div class="owner"><strong>'+p[4]+'</strong><small>'+p[5]+'</small><small>Last: '+(p[5]==='2 visits'?'15 Sept 2026':'No visits yet')+'</small></div></button>';
+  }).join('');
+  var pills=['All Species','Dog','Cat','Cattle','Horse','Goat','Rabbit'].map(function(s,i){
+    return '<button class="'+(i===0?'active':'')+'">'+s+'</button>';
+  }).join('');
+  return '<div class="patients-layout"><div class="patient-list"><div class="filter-row"><div class="searchbar">'+svg('search',17)+'<input placeholder="Search by name, species, breed, owner..." oninput="patientSearch(this.value)">'+(this.psq?'<button onclick="patientSearch(\'\')">'+svg('x',14)+'</button>':'')+'</div><div class="species-pills">'+pills+'</div></div>'+pl+'</div><div class="empty-detail">'+svg('pawprint',34)+'<p>Select a patient to view details</p></div></div>';
+}
+function renderPayments(){
+  var rows=payments.map(function(p){
+    return '<div class="table-row"><div><strong>'+p[0]+'</strong><small>'+(p[0]==='Priya Sharma'?'Bruno (Dog)':'')+'</small></div><div><span>'+p[1]+'</span><small>'+p[4]+'</small></div><strong>'+p[2]+'</strong><span>'+p[3]+'</span><span class="status paid">PAID</span><button class="link">'+svg('filetext',13)+' View</button></div>';
+  }).join('');
+  return '<div class="stats-row">'+stat('₹42,500','Total Received','green')+stat('₹0','Pending','orange')+stat('5','Transactions')+'</div><div class="table-card"><div class="table-head"><span>CLIENT / PET</span><span>SERVICE</span><span>AMOUNT</span><span>DATE</span><span>STATUS</span><span>INVOICE</span></div>'+rows+'</div>';
+}
+function renderFollowups(){
+  var rows=[['Whiskers','Priya Sharma','Skin infection follow-up — check healing progress','OVERDUE'],['Bruno','Priya Sharma','Post-vaccination check — verify no adverse reaction','PENDING'],['Nandi','Ramesh Patel','Hoof rot — confirm healing, check temperature','PENDING'],['Raja','Suresh Kumar','Post-dehydration — confirm recovery','PENDING']];
+  var fl=rows.map(function(r){
+    return '<div class="follow-card"><div class="pet-icon">'+svg('pawprint',18)+'</div><div><strong>'+r[0]+' <span class="dot">·</span> <small>'+r[1]+'</small> <em class="status '+r[3].toLowerCase()+'">'+r[3]+'</em></strong><p>'+r[2]+'</p><small>Previous visit: 2 Sept 2026\u3000 Follow-up due: <b>'+(r[3]==='OVERDUE'?'23 Sep 2026':'29 Sep 2026')+'</b></small></div><div class="follow-actions"><button class="link">Open Patient</button><button class="link">Open Client</button><button class="link">Open Record</button></div></div>';
+  }).join('');
+  return '<div class="stats-row">'+stat('1','Overdue','red')+stat('4','Pending','blue')+stat('0','Completed','green')+'</div><div class="follow-list">'+fl+'</div>';
+}
+function renderAppointments(){
+  var appts=[['09:00 AM','Bruno','Priya Sharma','Vaccination'],['10:30 AM','Whiskers','Priya Sharma','Skin infection'],['12:00 PM','Nandi','Ramesh Patel','Routine check-up'],['03:30 PM','Raja','Suresh Kumar','Dental examination']];
+  var al=appts.map(function(a){
+    return '<div class="appointment-card"><div class="time">'+a[0]+'<small>30 min</small></div><div class="pet-icon">'+svg('pawprint',18)+'</div><div><strong>'+a[1]+'</strong><span>'+a[2]+'</span><small>'+a[3]+'</small></div><span class="status confirmed">CONFIRMED</span><button class="more">'+svg('more',19)+'</button></div>';
+  }).join('');
+  return '<div class="appointment-toolbar"><div class="date-switch"><button>‹</button><strong>Today, 27 Sept</strong><button>›</button></div><div class="view-toggle"><button class="active">List</button><button>Calendar</button></div></div><div class="appointment-list">'+al+'</div>';
+}
+function renderDashboard(){
+  var items=['Bruno · Vaccination','Whiskers · Skin follow-up','Nandi · Routine check-up'];
+  var dates=['15 Sept 2026 · 9:00 AM','29 Sept 2026 · 10:30 AM','4 Oct 2026 · 12:00 PM'];
+  var sr=items.map(function(x,i){return '<div class="simple-row"><div class="pet-icon">'+svg('pawprint',16)+'</div><div><strong>'+x+'</strong><small>'+dates[i]+'</small></div><span class="status '+(i===0?'confirmed':'pending')+'">'+(i===0?'CONFIRMED':'UPCOMING')+'</span></div>';}).join('');
+  var qa=['View medical records','Download prescriptions','Update profile'].map(function(x){return '<button class="quick-action">'+svg('activity',16)+x+svg('arrowup',14)+'</button>';}).join('');
+  return '<div class="dashboard"><div class="welcome"><div><p class="eyebrow">GOOD MORNING, DOCTOR</p><h2>Here\'s what needs your attention.</h2></div><button class="primary" onclick="navigate(\'Appointments\')">'+svg('plus',16)+' New appointment</button></div><div class="stats-row four">'+stat('12',"Today's appointments")+stat('5','Upcoming visits')+stat('4','Prescriptions')+stat('₹42,500','Total received','green')+'</div><div class="dashboard-grid"><section class="panel"><div class="panel-title"><h3>Upcoming appointments</h3><button class="link" onclick="navigate(\'Appointments\')">View all '+svg('arrowup',14)+'</button></div>'+sr+'</section><section class="panel"><div class="panel-title"><h3>Quick actions</h3></div>'+qa+'</section></div></div>';
+}
+function renderGeneric(p){
+  return '<div class="generic-page"><div class="empty-state"><div class="empty-icon">'+svg('settings',27)+'</div><h3>'+p+' workspace</h3><p>Connect this view to your AWS service to load live practice data.</p><button class="secondary" onclick="openModal(\'Create '+p+'\')">'+svg('plus',16)+' Add new</button></div></div>';
+}
+function stat(n,l,a){return '<div class="stat'+(a?' '+a:'')+'"><strong>'+n+'</strong><span>'+l+'</span></div>';}
+function renderModal(){
+  var mc=document.getElementById('modalContainer');
+  if(!state.modal){mc.innerHTML='';return;}
+  mc.innerHTML='<div class="modal-backdrop" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><div><p class="eyebrow">VETWISE</p><h2>'+state.modal+'</h2></div><button class="icon-btn" onclick="closeModal()">'+svg('x',18)+'</button></div><div class="form-grid"><label>Client or owner<input placeholder="Search by name" /></label><label>Patient<input placeholder="Search by pet name" /></label><label>Date<input type="date" /></label><label>Notes<textarea placeholder="Add a note (optional)"></textarea></label></div><div class="modal-actions"><button class="secondary" onclick="closeModal()">Cancel</button><button class="primary" onclick="closeModal()">'+svg('check',16)+' Save</button></div></div></div>';
+}
+function render(){renderSidebar();renderHeading();renderContent();renderModal();}
+// ── Actions ──
+window.navigate=function(p){state.page=p;state.mobileOpen=false;state.query='';render();};
+window.selectClient=function(i){state.selectedClient=i;render();};
+window.onSearch=function(v){state.query=v;state.selectedClient=0;render();document.getElementById('clientSearch').focus();};
+window.patientSearch=function(v){/* placeholder */};
+window.openMobile=function(){document.getElementById('sidebar').classList.add('open');document.getElementById('scrim').style.display='block';};
+window.closeMobile=function(){document.getElementById('sidebar').classList.remove('open');document.getElementById('scrim').style.display='none';};
+window.openModal=function(t){state.modal=t;renderModal();};
+window.closeModal=function(){state.modal=null;renderModal();};
+// ── Init ──
+render();
+})();
+</script>
+</body>
+</html>

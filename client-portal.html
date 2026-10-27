@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#112b73" />
+<title>VetWise — Client Portal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+:root{font-family:'DM Sans',sans-serif;color:#14203b;background:#f7f8fb;font-synthesis:none;text-rendering:optimizeLegibility}*{box-sizing:border-box}body{margin:0;min-width:320px}button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;background:none;color:inherit}
+.app-shell{min-height:100vh;background:#f7f8fb}
+.sidebar{position:fixed;z-index:10;inset:0 auto 0 0;width:224px;background:#112b73;color:#d6e0ff;display:flex;flex-direction:column}
+.brand{height:58px;padding:0 18px;display:flex;align-items:center;gap:10px;color:#fff;font-family:Manrope;font-size:18px;font-weight:800;border-bottom:1px solid #294486}
+.brand-mark{width:28px;height:28px;border-radius:6px;background:#5169a7;display:grid;place-items:center;color:#fff}
+.brand-mark svg{width:18px;height:18px}
+.portal-label{font-size:10px;letter-spacing:1.2px;font-weight:700;color:#8ea5e0;padding:24px 16px 13px}
+.sidebar nav{display:flex;flex-direction:column;gap:3px;padding:0 7px}
+.nav-item{display:flex;align-items:center;gap:13px;color:#cbd7fb;text-align:left;padding:11px 10px;border-radius:6px;font-size:14px;font-weight:600;transition:.2s;width:100%}
+.nav-item:hover,.nav-item.active{background:#425994;color:#fff}
+.nav-item svg{width:17px;height:17px;flex:none}
+.sidebar-bottom{margin-top:auto;border-top:1px solid #294486;padding:14px 10px 16px}
+.user-mini{display:flex;align-items:center;gap:10px;font-size:11px;color:#c6d2f7;margin-bottom:16px}
+.signout{display:flex;gap:10px;align-items:center;font-size:13px;color:#a9b9ed}
+.signout svg{width:15px;height:15px}
+.avatar{width:36px;height:36px;background:#e9edf5;color:#133174;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.avatar.small{width:27px;height:27px;background:#4964a7;color:#fff}
+.avatar.large{width:46px;height:46px;font-size:17px}
+.main-area{margin-left:224px;min-height:100vh}
+.topbar{height:52px;background:#fff;border-bottom:1px solid #e1e5eb;display:flex;justify-content:space-between;align-items:center;padding:0 18px;color:#60708b;font-size:12px}
+.top-actions{display:flex;gap:15px;align-items:center}
+.icon-btn{position:relative;display:grid;place-items:center;padding:4px;color:#243755}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn b{position:absolute;top:-2px;right:-4px;background:#ef4444;color:#fff;font-size:9px;width:15px;height:15px;border-radius:50%;display:grid;place-items:center}
+.profile-btn{display:flex;align-items:center;gap:8px}
+.profile-btn span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#112b73;color:white;font-weight:700}
+.profile-btn svg{width:14px;height:14px}
+.mobile-menu,.scrim{display:none}
+.page-wrap{max-width:1260px;padding:28px 26px 60px;margin:auto}
+.page-heading{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:12px}
+.page-heading h1{font-family:Manrope;margin:0;font-size:21px;letter-spacing:-.35px}
+.page-heading p{margin:4px 0 0;color:#73809a;font-size:13px}
+.primary,.secondary{display:inline-flex;gap:8px;align-items:center;justify-content:center;border-radius:6px;padding:10px 14px;font-size:13px;font-weight:700;transition:.2s}
+.primary{background:#112b73;color:#fff}
+.primary:hover{background:#24458f;transform:translateY(-1px)}
+.secondary{background:#fff;border:1px solid #dce2eb;color:#1b366f}
+.primary svg,.secondary svg{width:16px;height:16px}
+.searchbar{height:38px;display:flex;align-items:center;gap:9px;padding:0 12px;border:1px solid #dfe4ec;border-radius:7px;background:#fff;color:#9aa7bc}
+.searchbar svg{width:17px;height:17px;flex:none}
+.searchbar input{border:0;outline:0;flex:1;color:#263a5f;font-size:13px;background:none}
+.searchbar input::placeholder{color:#a6b0c1}
+.searchbar button svg{width:14px;height:14px}
+.clients-layout,.patients-layout{display:grid;grid-template-columns:1fr 1.1fr;gap:16px}
+.list-column,.patient-list{min-width:0}
+.client-list,.patient-list{display:flex;flex-direction:column;gap:8px}
+.client-list{margin-top:14px}
+.client-card,.patient-card{display:flex;align-items:center;text-align:left;gap:12px;background:#fff;border:1px solid #dfe4eb;border-radius:7px;padding:12px;min-height:76px;box-shadow:0 1px 1px #1d31520a;transition:.2s;width:100%}
+.client-card:hover,.client-card.selected,.patient-card:hover{border-color:#193b89;box-shadow:0 2px 8px #233c7020}
+.card-main{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.card-main strong{color:#142849;font-size:14px}
+.card-main span{font-size:12px;color:#53627b}
+.card-main small,.last-visit small,.owner small{color:#97a2b5;font-size:11px}
+.last-visit{display:flex;flex-direction:column;align-items:flex-end;gap:3px;color:#304872;font-size:12px}
+.detail-card,.empty-detail,.panel,.table-card,.follow-card,.appointment-card{background:#fff;border:1px solid #dfe4eb;border-radius:7px}
+.detail-card{min-height:310px}
+.detail-head{display:flex;align-items:center;gap:12px;padding:19px 18px;border-bottom:1px solid #edf0f4}
+.detail-head h2{margin:0;font-family:Manrope;font-size:17px}
+.detail-head p{margin:4px 0 0;color:#79869c;font-size:12px}
+.tabs{display:flex;gap:5px;padding:12px 18px;border-bottom:1px solid #edf0f4}
+.tabs button{padding:7px 12px;border-radius:6px;color:#6c7890;font-size:12px;font-weight:600}
+.tabs button.active{background:#112b73;color:white}
+.detail-content{padding:17px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;border-bottom:1px solid #edf0f4;padding-bottom:19px}
+.info-grid .wide{grid-column:1/-1}
+.info-grid label,.eyebrow{display:block;color:#8290a9;font-size:10px;font-weight:700;letter-spacing:.8px;margin-bottom:6px}
+.info-grid strong{font-size:13px;font-weight:500;color:#243b62}
+.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.stat{background:#fff;border:1px solid #dfe4eb;border-radius:7px;padding:16px 17px;display:flex;flex-direction:column;gap:5px}
+.stat strong{font-family:Manrope;font-size:21px;color:#152847}
+.stat span{color:#8290a2;font-size:12px}
+.stat.green strong{color:#0b9b55}
+.stat.orange strong{color:#dd8400}
+.stat.red strong{color:#e02828}
+.stat.blue strong{color:#3471da}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stats-row.four{grid-template-columns:repeat(4,1fr)}
+.filter-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.filter-row .searchbar{flex:1}
+.species-pills{display:flex;gap:5px}
+.species-pills button,.view-toggle button{border:1px solid #dfe4eb;background:#fff;border-radius:6px;padding:9px 11px;font-size:12px;color:#5a6b87;white-space:nowrap}
+.species-pills button.active,.view-toggle button.active{background:#112b73;color:#fff;border-color:#112b73}
+.patient-card{min-height:72px}
+.pet-icon{width:37px;height:37px;border-radius:50%;background:#f2f4f7;color:#78849a;display:grid;place-items:center;flex:none}
+.pet-icon svg{width:19px;height:19px}
+.patient-card .owner{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:155px}
+.owner strong{font-size:12px;color:#243b62}
+.tag{font-style:normal;font-size:9px;padding:3px 6px;border-radius:10px;margin-left:5px}
+.tag.dog{background:#fff2da;color:#cc7c00}
+.tag.cat{background:#eee9ff;color:#7355bc}
+.tag.cattle{background:#e4f8ec;color:#159453}
+.tag.horse{background:#f2e7df;color:#9b6042}
+.tag.goat{background:#e8f8f5;color:#168f7f}
+.tag.rabbit{background:#ffe8f2;color:#d64c84}
+.muted{color:#9aa6b8;font-size:11px}
+.empty-detail{display:grid;place-items:center;align-content:center;gap:8px;min-height:124px;color:#a4aebe;font-size:13px}
+.empty-detail p{margin:0}
+.empty-detail svg{width:34px;height:34px}
+.table-card{overflow:hidden}
+.table-head,.table-row{display:grid;grid-template-columns:1.15fr 2fr .75fr 1fr .8fr .65fr;align-items:center;gap:12px;padding:12px 16px}
+.table-head{background:#fbfcfd;color:#8290a5;font-size:10px;font-weight:700;letter-spacing:.5px}
+.table-row{min-height:70px;border-top:1px solid #eef1f5;font-size:12px;color:#4e607a}
+.table-row strong{color:#162b4d;font-size:13px}
+.table-row div{display:flex;flex-direction:column;gap:3px}
+.table-row small{color:#99a5b6;font-size:10px}
+.status{font-size:9px;font-style:normal;font-weight:800;letter-spacing:.3px;border-radius:10px;padding:4px 7px;width:max-content}
+.paid,.confirmed{color:#079653;background:#ebfff4;border:1px solid #b8efd2}
+.pending{color:#3575da;background:#edf5ff;border:1px solid #c7ddff}
+.overdue{color:#e73535;background:#fff0f0;border:1px solid #ffc7c7}
+.live{color:#d4731a;background:#fff8e6;border:1px solid #ffd9a0}
+.link{display:inline-flex;align-items:center;gap:4px;color:#1c438b;font-size:12px;font-weight:600}
+.link svg{width:13px;height:13px}
+.follow-list{display:flex;flex-direction:column;gap:9px}
+.follow-card{padding:17px 18px;display:flex;gap:14px}
+.follow-card>div:nth-child(2){flex:1}
+.follow-card strong{font-size:14px}
+.follow-card strong small{font-size:12px;color:#75849a;font-weight:500}
+.follow-card p{margin:5px 0;color:#364d71;font-size:12px}
+.follow-card>div>small{color:#99a5b7;font-size:10px}
+.dot{color:#b8c0cc;margin:0 3px}
+.follow-actions{align-self:flex-end;display:flex;gap:14px}
+.appointment-toolbar{display:flex;justify-content:space-between;margin-bottom:14px}
+.date-switch,.view-toggle{display:flex;align-items:center;gap:9px}
+.date-switch button{font-size:20px;color:#77849a}
+.date-switch strong{font-size:14px}
+.view-toggle{gap:0}
+.view-toggle button{border-radius:0}
+.view-toggle button:first-child{border-radius:6px 0 0 6px}
+.view-toggle button:last-child{border-radius:0 6px 6px 0;margin-left:-1px}
+.appointment-list{display:flex;flex-direction:column;gap:8px}
+.appointment-card{display:flex;align-items:center;gap:15px;padding:14px 17px}
+.time{width:78px;font-size:13px;font-weight:700;color:#1b355d}
+.time small{display:block;color:#9ca8b8;font-size:10px;font-weight:400;margin-top:3px}
+.appointment-card>div:nth-child(3){display:flex;flex-direction:column;gap:3px;flex:1}
+.appointment-card>div:nth-child(3) span,.appointment-card>div:nth-child(3) small{font-size:12px;color:#71809a}
+.more{color:#8290a4}
+.more svg{width:19px;height:19px}
+.dashboard .welcome{background:#eaf1ff;border:1px solid #d3e1ff;border-radius:8px;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}
+.welcome h2{font-family:Manrope;font-size:19px;margin:0;color:#132f65}
+.welcome .eyebrow{color:#4365a3;margin-bottom:7px}
+.dashboard-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:16px}
+.panel{padding:18px}
+.panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.panel-title h3{font-family:Manrope;font-size:15px;margin:0}
+.simple-row{display:flex;align-items:center;gap:11px;border-top:1px solid #edf0f4;padding:12px 0}
+.simple-row>div:nth-child(2){display:flex;flex-direction:column;flex:1;gap:3px}
+.simple-row strong{font-size:12px}
+.simple-row small{font-size:11px;color:#8491a5}
+.quick-action{display:flex;align-items:center;gap:10px;width:100%;padding:13px 0;border-top:1px solid #edf0f4;color:#3d5881;font-size:12px;text-align:left}
+.quick-action svg{width:16px;height:16px}
+.quick-action svg:last-child{margin-left:auto;width:14px;height:14px}
+.generic-page{min-height:400px;display:grid;place-items:center}
+.empty-state{text-align:center;color:#8290a6}
+.empty-state h3{color:#253b5c;margin:12px 0 6px;font-family:Manrope}
+.empty-state p{font-size:13px;max-width:360px;line-height:1.5;margin:0 auto 17px}
+.empty-state>svg{color:#a5b0c0;width:40px;height:40px}
+.empty-icon svg{width:27px;height:27px}
+.modal-backdrop{position:fixed;inset:0;background:#10244d66;display:grid;place-items:center;z-index:50;padding:18px}
+.modal{background:#fff;width:min(560px,100%);border-radius:10px;box-shadow:0 18px 55px #091b3a35;padding:22px;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;justify-content:space-between}
+.modal-head h2{margin:0;font-family:Manrope;font-size:19px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.form-grid label{font-size:11px;color:#687993;font-weight:700}
+.form-grid label.wide{grid-column:1/-1}
+.form-grid input,.form-grid textarea,.form-grid select{display:block;width:100%;border:1px solid #dce3ed;border-radius:6px;padding:10px;margin-top:6px;outline:0;font-size:13px;color:#263b60}
+.form-grid textarea{min-height:75px;resize:vertical}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px}
+.payment-section{margin-bottom:22px}
+.payment-section h3{font-family:Manrope;font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.payment-section h3 .count{font-size:11px;color:#8290a5;font-weight:500}
+.payment-tabs{display:flex;gap:5px;margin-bottom:16px}
+.payment-tabs button{padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;color:#6c7890;border:1px solid #dfe4eb;background:#fff}
+.payment-tabs button.active{background:#112b73;color:#fff;border-color:#112b73}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.plan-card{background:#fff;border:2px solid #dfe4eb;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:.2s}
+.plan-card:hover{border-color:#193b89;box-shadow:0 2px 8px #233c7020}
+.plan-card.current{border-color:#112b73;background:#f8faff}
+.plan-card h4{font-family:Manrope;font-size:16px;margin:0}
+.plan-card .price{font-family:Manrope;font-size:24px;color:#152847}
+.plan-card .price small{font-size:12px;color:#8290a2;font-weight:400}
+.plan-card ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.plan-card li{font-size:12px;color:#53627b;display:flex;gap:6px;align-items:flex-start}
+.plan-card li svg{width:14px;height:14px;color:#0b9b55;flex:none;margin-top:1px}
+.plan-card .current-badge{font-size:10px;font-weight:700;color:#0b9b55;background:#ebfff4;border:1px solid #b8efd2;border-radius:10px;padding:3px 8px;width:max-content}
+.breed-suggestions{position:relative}
+.breed-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #dce3ed;border-radius:0 0 6px 6px;border-top:0;max-height:160px;overflow-y:auto;z-index:20;display:none}
+.breed-list.open{display:block}
+.breed-list button{display:block;width:100%;text-align:left;padding:8px 12px;font-size:12px;color:#263b60;border-bottom:1px solid #f0f2f5}
+.breed-list button:hover{background:#f8faff}
+.breed-list button:last-child{border-bottom:0}
+.record-card{background:#fff;border:1px solid #dfe4eb;border-radius:7px;padding:16px 18px;margin-bottom:10px}
+.record-card .record-pet{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #edf0f4}
+.record-card .record-pet .pet-icon{width:32px;height:32px}
+.record-card .record-pet strong{font-size:13px}
+.record-card .record-pet small{font-size:11px;color:#8290a2}
+.record-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.record-grid label{font-size:10px;color:#8290a9;font-weight:700;letter-spacing:.5px}
+.record-grid strong{font-size:12px;font-weight:500;color:#243b62}
+.rx-card{background:#fff;border:1px solid #dfe4eb;border-radius:7px;padding:16px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start}
+.rx-card .pet-icon{width:36px;height:36px}
+.rx-card>div:nth-child(2){flex:1}
+.rx-card strong{font-size:14px}
+.rx-card small{font-size:11px;color:#8290a2}
+.rx-card .rx-meds{margin:8px 0;font-size:12px;color:#364d71}
+.rx-actions{display:flex;gap:10px;align-self:flex-start}
+.profile-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:560px}
+.profile-form label{font-size:11px;color:#687993;font-weight:700}
+.profile-form label.wide{grid-column:1/-1}
+.profile-form input{display:block;width:100%;border:1px solid #dce3ed;border-radius:6px;padding:10px;margin-top:6px;outline:0;font-size:13px;color:#263b60}
+.profile-form .save-row{grid-column:1/-1;display:flex;gap:8px;margin-top:4px}
+@media(max-width:980px){.sidebar{width:205px}.main-area{margin-left:205px}.clients-layout,.patients-layout{grid-template-columns:1fr}.detail-card,.empty-detail{min-height:280px}.patients-layout .empty-detail{display:none}.filter-row{flex-wrap:wrap}.filter-row .searchbar{min-width:100%}.dashboard-grid{grid-template-columns:1fr}.table-card{overflow-x:auto}.table-head,.table-row{min-width:800px}.plan-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.sidebar{transform:translateX(-100%);transition:.22s;width:250px;box-shadow:12px 0 30px #091b3a40}.sidebar.open{transform:translateX(0)}.scrim{display:block;position:fixed;z-index:9;inset:0;background:#07163180}.main-area{margin-left:0}.mobile-menu{display:grid;place-items:center;color:#18366e}.mobile-menu svg{width:20px;height:20px}.topbar{padding:0 14px}.date{margin-right:auto;margin-left:12px}.page-wrap{padding:22px 14px 45px}.page-heading{gap:12px}.heading-actions .primary{padding:9px 10px;font-size:11px}.stats-row,.stats-row.four{grid-template-columns:1fr 1fr}.stat{padding:13px}.stat strong{font-size:18px}.client-card{min-height:71px}.last-visit{display:none}.detail-card{min-height:0}.tabs{overflow:auto}.tabs button{white-space:nowrap}.info-grid{grid-template-columns:1fr}.info-grid .wide{grid-column:auto}.patient-card .owner{display:none}.appointment-card{gap:10px;padding:12px}.appointment-card .status{display:none}.time{width:62px;font-size:11px}.follow-card{padding:14px;flex-wrap:wrap}.follow-actions{width:100%;padding-top:10px;border-top:1px solid #edf0f4}.dashboard .welcome{display:block;padding:18px}.welcome .primary{margin-top:16px}.form-grid{grid-template-columns:1fr}.form-grid label.wide{grid-column:auto}.profile-form{grid-template-columns:1fr}.profile-form label.wide{grid-column:auto}.plan-grid{grid-template-columns:1fr}.record-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark" id="brandIcon"></div><span>VetWise</span></div>
+    <div class="portal-label" id="portalLabel">CLIENT PORTAL</div>
+    <nav id="nav"></nav>
+    <div class="sidebar-bottom">
+      <div class="user-mini"><div class="avatar small" id="userAvatar">P</div><span id="userName">Priya Sharma</span></div>
+      <button class="signout" onclick="location.href='login.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" onclick="closeMobile()"></div>
+  <main class="main-area">
+    <header class="topbar">
+      <button class="mobile-menu" onclick="openMobile()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+      <span class="date">Sun, 28 Sept, 2026</span>
+      <div class="top-actions">
+        <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+        <button class="profile-btn" onclick="navigate('Profile')"><span>P</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      </div>
+    </header>
+    <div class="page-wrap">
+      <div class="page-heading">
+        <div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Welcome back, Priya</p></div>
+        <div class="heading-actions" id="headingActions"></div>
+      </div>
+      <div id="content"></div>
+    </div>
+  </main>
+  <div id="modalContainer"></div>
+</div>
+<script>
+(function(){
+var PORTAL_LABEL='CLIENT PORTAL',USER_NAME='Priya Sharma',USER_INITIAL='P';
+var nav=[
+  {label:'Dashboard',icon:'dashboard'},{label:'My Pets',icon:'pawprint'},
+  {label:'Visits',icon:'calendar'},{label:'Medical Records',icon:'filetext'},
+  {label:'Prescriptions',icon:'clipboard'},{label:'Payments',icon:'creditcard'},
+  {label:'Subscription',icon:'shield'},{label:'Profile',icon:'user'}
+];
+var IC={
+  stethoscope:'<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 1.5 3.96L5 14.5V20a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5.5l1.5-.54A6 6 0 0 0 22 9V5a2 2 0 0 0-2-2h-1"/><path d="M5 6a6 6 0 0 1 6 6"/>',
+  dashboard:'<rect width="7" height="9" x="1" y="1" rx="1"/><rect width="7" height="5" x="1" y="12" rx="1"/><rect width="7" height="9" x="14" y="1" rx="1"/><rect width="7" height="5" x="14" y="12" rx="1"/>',
+  calendar:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>',
+  pawprint:'<circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="4" cy="8" r="2"/><circle cx="11" cy="12" r="2"/><path d="M5 10v.5A6 6 0 0 0 11 16a6 6 0 0 0 6-5.5V10"/>',
+  filetext:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+  clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+  creditcard:'<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+  shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  arrowup:'<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+  activity:'<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
+  settings:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>'
+};
+function svg(n,s){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:'+(s||16)+'px;height:'+(s||16)+'px">'+(IC[n]||'')+'</svg>';}
+var myPets=[
+  {name:'Bruno',species:'Dog',breed:'Labrador Retriever',color:'Golden',sex:'Male',age:'3y 2m',weight:'28.5 kg',visits:2,lastVisit:'15 Sept 2026'},
+  {name:'Whiskers',species:'Cat',breed:'Persian',color:'White & Grey',sex:'Female',age:'2y 8m',weight:'4.2 kg',visits:1,lastVisit:'2 Sept 2026'}
+];
+var paidPayments=[
+  {service:'Gold Plan — Annual Subscription',amount:'₹12,000',date:'1 Jan 2026',method:'UPI',status:'PAID'},
+  {service:'Home Visit — Bruno (Vaccination)',amount:'₹800',date:'15 Sept 2026',method:'Card',status:'PAID'},
+  {service:'Home Visit — Whiskers (Skin Infection)',amount:'₹1,200',date:'2 Sept 2026',method:'UPI',status:'PAID'}
+];
+var upcomingPayments=[
+  {service:'Home Visit — Bruno (Annual Check-up)',amount:'₹1,000',due:'5 Oct 2026',status:'UPCOMING'},
+  {service:'Gold Plan Renewal — Annual',amount:'₹12,000',due:'1 Jan 2027',status:'UPCOMING'}
+];
+var livePayments=[
+  {service:'Home Visit — Whiskers (Follow-up Consultation)',amount:'₹800',status:'LIVE'}
+];
+var plans=[
+  {name:'Bronze',price:'₹500',period:'/month',benefits:['1 home visit per month','Teleconsultation (2 calls)','Digital prescriptions','Vaccination reminders'],current:false},
+  {name:'Gold',price:'₹12,000',period:'/year',benefits:['Unlimited home visits','24/7 teleconsultation','Digital prescriptions','Vaccination reminders','Priority scheduling'],current:true},
+  {name:'Platinum',price:'₹22,000',period:'/year',benefits:['Everything in Gold','Emergency vet visits','Surgery coverage','Lab tests included','Dedicated vet manager'],current:false}
+];
+var breeds=['Labrador Retriever','German Shepherd','Golden Retriever','Poodle','Beagle','Rottweiler','Persian','Siamese','Maine Coon','Bengal','British Shorthair','Gir','Sahiwal','Murrah Buffalo','Marwari','Kathiawari','Beetal','Jamunapari','Angora','Rex','Dutch'];
+var state={page:'Dashboard',modal:null,selectedPet:null,paymentTab:'all',profile:{name:'Priya Sharma',phone:'+91 9876543210',email:'priya@demo.com',address:'12 MG Road, Bandra West, Mumbai, Maharashtra — 400050'}};
+function subtitle(p){
+  var m={Dashboard:'Welcome back, Priya','My Pets':'Your registered pets','Visits':'Your upcoming and past visits','Medical Records':'Health history for your pets',Prescriptions:'Medicines prescribed to your pets (read-only)',Payments:'Your payments — paid, upcoming, and live',Subscription:'Your VetWise subscription plan',Profile:'Manage your account information'};
+  return m[p]||'Manage your VetWise account';
+}
+function renderSidebar(){
+  document.getElementById('brandIcon').innerHTML=svg('stethoscope',18);
+  document.getElementById('portalLabel').textContent=PORTAL_LABEL;
+  document.getElementById('userAvatar').textContent=USER_INITIAL;
+  document.getElementById('userName').textContent=USER_NAME;
+  document.getElementById('nav').innerHTML=nav.map(function(n){
+    return '<button class="nav-item'+(state.page===n.label?' active':'')+'" onclick="navigate(\''+n.label+'\')">'+svg(n.icon,17)+'<span>'+n.label+'</span></button>';
+  }).join('');
+}
+function renderHeading(){
+  document.getElementById('pageTitle').textContent=state.page;
+  document.getElementById('pageSubtitle').textContent=subtitle(state.page);
+  var ha=document.getElementById('headingActions');
+  if(state.page==='Visits')ha.innerHTML='<button class="primary" onclick="openModal(\'book-visit\')">'+svg('plus',16)+' Book a visit</button>';
+  else if(state.page==='My Pets')ha.innerHTML='<button class="primary" onclick="openModal(\'add-pet\')">'+svg('plus',16)+' Add a pet</button>';
+  else ha.innerHTML='';
+}
+function renderContent(){
+  var c=document.getElementById('content'),p=state.page;
+  if(p==='Dashboard')c.innerHTML=renderDashboard();
+  else if(p==='My Pets')c.innerHTML=renderMyPets();
+  else if(p==='Visits')c.innerHTML=renderVisits();
+  else if(p==='Medical Records')c.innerHTML=renderMedicalRecords();
+  else if(p==='Prescriptions')c.innerHTML=renderPrescriptions();
+  else if(p==='Payments')c.innerHTML=renderPayments();
+  else if(p==='Subscription')c.innerHTML=renderSubscription();
+  else if(p==='Profile')c.innerHTML=renderProfile();
+  else c.innerHTML=renderGeneric(p);
+}
+function renderDashboard(){
+  var sr=myPets.map(function(p,i){
+    return '<div class="simple-row"><div class="pet-icon">'+svg('pawprint',16)+'</div><div><strong>'+p.name+' · '+(p.visits>0?'Last visit '+p.lastVisit:'No visits yet')+'</strong><small>'+(p.visits>0?p.visits+' visits':'New patient')+'</small></div><span class="status '+(p.visits>0?'confirmed':'pending')+'">'+(p.visits>0?'ACTIVE':'NEW')+'</span></div>';
+  }).join('');
+  var qa=['View medical records','Download prescriptions','Update profile'].map(function(x){
+    var target=x.indexOf('medical')>=0?'Medical Records':x.indexOf('prescription')>=0?'Prescriptions':'Profile';
+    return '<button class="quick-action" onclick="navigate(\''+target+'\')">'+svg('activity',16)+x+svg('arrowup',14)+'</button>';
+  }).join('');
+  return '<div class="dashboard"><div class="welcome"><div><p class="eyebrow">YOUR PET CARE</p><h2>How are your pets doing today?</h2></div><button class="primary" onclick="navigate(\'Visits\')">'+svg('plus',16)+' Book a visit</button></div><div class="stats-row four">'+stat(myPets.length+'','My Pets')+stat('0','Upcoming visits')+stat('0','Active prescriptions')+stat('₹0','Upcoming payments','orange')+'</div><div class="dashboard-grid"><section class="panel"><div class="panel-title"><h3>Your pets</h3><button class="link" onclick="navigate(\'My Pets\')">View all '+svg('arrowup',14)+'</button></div>'+sr+'</section><section class="panel"><div class="panel-title"><h3>Quick actions</h3></div>'+qa+'</section></div></div>';
+}
+function renderMyPets(){
+  var pl=myPets.map(function(p,i){
+    return '<button class="patient-card" onclick="selectPet('+i+')"><div class="pet-icon">'+svg('pawprint',19)+'</div><div class="card-main"><strong>'+p.name+' <em class="tag '+p.species.toLowerCase()+'">'+p.species+'</em><span class="muted"> '+p.sex+'</span></strong><span>'+p.breed+' · '+p.color+'</span><small>'+p.age+' · '+p.weight+'</small></div><div class="owner"><small>'+p.visits+' '+(p.visits===1?'visit':'visits')+'</small><small>Last: '+p.lastVisit+'</small></div></button>';
+  }).join('');
+  if(state.selectedPet!==null&&myPets[state.selectedPet]){
+    var p=myPets[state.selectedPet];
+    var detail='<div class="detail-card"><div class="detail-head"><div class="avatar large">'+p.name.charAt(0)+'</div><div><h2>'+p.name+'</h2><p>'+p.species+' · '+p.breed+' · '+p.sex+'</p></div></div><div class="tabs"><button class="active">Overview</button><button onclick="navigate(\'Medical Records\')">Medical Records</button><button onclick="navigate(\'Prescriptions\')">Prescriptions</button><button onclick="navigate(\'Visits\')">Visits</button></div><div class="detail-content"><div class="info-grid"><div><label>SPECIES</label><strong>'+p.species+'</strong></div><div><label>BREED</label><strong>'+p.breed+'</strong></div><div><label>SEX</label><strong>'+p.sex+'</strong></div><div><label>COLOR</label><strong>'+p.color+'</strong></div><div><label>AGE</label><strong>'+p.age+'</strong></div><div><label>WEIGHT</label><strong>'+p.weight+'</strong></div><div class="wide"><label>OWNER</label><strong>'+state.profile.name+' (You)</strong></div></div><div class="mini-stats">'+stat(p.visits+'','Visits')+stat(p.lastVisit,'Last Visit')+stat('Active','Status')+'</div></div></div>';
+  } else {
+    var detail='<div class="empty-detail">'+svg('pawprint',34)+'<p>Select a pet to view details</p></div>';
+  }
+  return '<div class="patients-layout"><div class="patient-list"><div class="filter-row"><div class="searchbar">'+svg('search',17)+'<input placeholder="Search by name, species, breed..."></div></div>'+pl+'</div>'+detail+'</div>';
+}
+function renderVisits(){
+  return '<div class="empty-state">'+svg('calendar',40)+'<h3>No upcoming visits</h3><p>Book a visit for your pet and keep their care on track.</p><button class="primary" onclick="openModal(\'book-visit\')">'+svg('plus',16)+' Book appointment</button></div>';
+}
+function renderMedicalRecords(){
+  var records=[
+    {pet:'Bruno',species:'Dog',breed:'Labrador Retriever',date:'15 Sept 2026',reason:'Vaccination',diagnosis:'Healthy — routine vaccination administered',treatment:'Rabies + DHPP booster',notes:'No adverse reactions observed',followup:'Annual check-up in 1 year'},
+    {pet:'Whiskers',species:'Cat',breed:'Persian',date:'2 Sept 2026',reason:'Skin Infection',diagnosis:'Bacterial dermatitis — right flank',treatment:'Antibacterial shampoo + oral antibiotics (7 days)',notes:'Owner to monitor for hair loss',followup:'Follow-up in 2 weeks'}
+  ];
+  var cards=records.map(function(r){
+    return '<div class="record-card"><div class="record-pet"><div class="pet-icon">'+svg('pawprint',16)+'</div><div><strong>'+r.pet+'</strong><small>'+r.species+' · '+r.breed+' · Owner: '+state.profile.name+'</small></div></div><div class="record-grid"><div><label>VISIT DATE</label><strong>'+r.date+'</strong></div><div><label>REASON</label><strong>'+r.reason+'</strong></div><div><label>DIAGNOSIS</label><strong>'+r.diagnosis+'</strong></div><div><label>TREATMENT</label><strong>'+r.treatment+'</strong></div><div><label>NOTES</label><strong>'+r.notes+'</strong></div><div><label>FOLLOW-UP</label><strong>'+r.followup+'</strong></div></div></div>';
+  }).join('');
+  return '<div class="searchbar" style="margin-bottom:14px">'+svg('search',17)+'<input placeholder="Search by pet name, diagnosis, date..."></div>'+cards;
+}
+function renderPrescriptions(){
+  var rxList=[
+    {pet:'Whiskers',vet:'Dr. Anita Rao',date:'2 Sept 2026',meds:'Amoxicillin 250mg — 1 tablet twice daily for 7 days',status:'Active'},
+    {pet:'Bruno',vet:'Dr. Anita Rao',date:'15 Sept 2026',meds:'Multivitamin supplement — 1 tablet daily',status:'Completed'}
+  ];
+  var cards=rxList.map(function(r){
+    return '<div class="rx-card"><div class="pet-icon">'+svg('pawprint',16)+'</div><div><strong>'+r.pet+' <span class="dot">·</span> <small>'+r.vet+' · '+r.date+'</small></strong><div class="rx-meds">'+r.meds+'</div><small>Status: <em class="status '+(r.status==='Active'?'confirmed':'pending')+'">'+r.status.toUpperCase()+'</em></small></div><div class="rx-actions"><button class="link">'+svg('download',13)+' Download PDF</button><button class="link">View Details</button></div></div>';
+  }).join('');
+  return '<div class="empty-state" style="text-align:left;margin-bottom:16px">'+svg('alert',16)+'<p style="margin:0;font-size:12px;color:#8290a5">Prescriptions are created by your veterinarian. You can view and download them but cannot create or edit prescriptions.</p></div>'+cards;
+}
+function renderPayments(){
+  var tab=state.paymentTab;
+  var paidRows=paidPayments.map(function(p){
+    return '<div class="table-row"><div><strong>'+p.service+'</strong><small>'+p.method+'</small></div><div><span></span></div><strong>'+p.amount+'</strong><span>'+p.date+'</span><span class="status paid">PAID</span><button class="link">'+svg('filetext',13)+' Invoice</button></div>';
+  }).join('');
+  var upcomingRows=upcomingPayments.map(function(p){
+    return '<div class="table-row"><div><strong>'+p.service+'</strong><small>Due '+p.due+'</small></div><div><span></span></div><strong>'+p.amount+'</strong><span>'+p.due+'</span><span class="status pending">UPCOMING</span><button class="link">Details</button></div>';
+  }).join('');
+  var liveRows=livePayments.map(function(p){
+    return '<div class="table-row"><div><strong>'+p.service+'</strong><small>Payment required now</small></div><div><span></span></div><strong>'+p.amount+'</strong><span>Now</span><span class="status live">LIVE</span><button class="primary" style="padding:6px 12px;font-size:11px" onclick="alert(\'Razorpay payment flow would open here. Backend integration required.\')">Pay Now</button></div>';
+  }).join('');
+  var tabsHtml='<div class="payment-tabs"><button class="'+(tab==='all'?'active':'')+'" onclick="setPaymentTab(\'all\')">All ('+(paidPayments.length+upcomingPayments.length+livePayments.length)+')</button><button class="'+(tab==='paid'?'active':'')+'" onclick="setPaymentTab(\'paid\')">Paid ('+paidPayments.length+')</button><button class="'+(tab==='upcoming'?'active':'')+'" onclick="setPaymentTab(\'upcoming\')">Upcoming ('+upcomingPayments.length+')</button><button class="'+(tab==='live'?'active':'')+'" onclick="setPaymentTab(\'live\')">Live ('+livePayments.length+')</button></div>';
+  var tableHead='<div class="table-card"><div class="table-head"><span>SERVICE</span><span></span><span>AMOUNT</span><span>DATE</span><span>STATUS</span><span></span></div>';
+  var sections='';
+  if(tab==='all'||tab==='paid')sections+='<div class="payment-section"><h3>'+svg('check',16)+' Paid <span class="count">('+paidPayments.length+')</span></h3>'+tableHead+paidRows+'</div>';
+  if(tab==='all'||tab==='upcoming')sections+='<div class="payment-section"><h3>'+svg('calendar',16)+' Upcoming <span class="count">('+upcomingPayments.length+')</span></h3>'+tableHead+upcomingRows+'</div>';
+  if(tab==='all'||tab==='live')sections+='<div class="payment-section"><h3>'+svg('alert',16)+' Live — Payment Required <span class="count">('+livePayments.length+')</span></h3>'+tableHead+liveRows+'</div>';
+  return '<div class="stats-row">'+stat('₹14,000','Total Paid','green')+stat('₹13,000','Upcoming','orange')+stat(livePayments.length+'','Live Payments','blue')+'</div>'+tabsHtml+sections;
+}
+function renderSubscription(){
+  var cards=plans.map(function(p){
+    var benefits=p.benefits.map(function(b){return '<li>'+svg('check',14)+b+'</li>';}).join('');
+    var badge=p.current?'<span class="current-badge">Current Plan</span>':'';
+    var btn=p.current?'<button class="secondary" disabled style="opacity:.6">Current Plan</button>':'<button class="primary" onclick="alert(\'Subscription selection would proceed to Razorpay payment. Backend integration required.\')">Select Plan</button>';
+    return '<div class="plan-card'+(p.current?' current':'')+'">'+badge+'<h4>'+p.name+'</h4><div class="price">'+p.price+'<small>'+p.period+'</small></div><ul>'+benefits+'</ul>'+btn+'</div>';
+  }).join('');
+  return '<div class="detail-card" style="min-height:auto;margin-bottom:16px"><div class="detail-head"><div class="avatar large" style="background:#112b73;color:#fff">G</div><div><h2>Current Subscription</h2><p>Gold Plan · Annual · Active since 1 Jan 2026</p></div></div><div class="detail-content"><div class="info-grid"><div><label>PLAN</label><strong>Gold — Annual</strong></div><div><label>PRICE</label><strong>₹12,000 / year</strong></div><div><label>STATUS</label><strong style="color:#0b9b55">Active</strong></div><div><label>RENEWS ON</label><strong>1 Jan 2027</strong></div></div></div></div><div class="panel"><div class="panel-title"><h3>Available Plans</h3></div><div class="plan-grid">'+cards+'</div></div>';
+}
+function renderProfile(){
+  return '<section class="detail-card" style="min-height:auto"><div class="detail-head"><div class="avatar large">P</div><div><h2>'+state.profile.name+'</h2><p>Mumbai, Maharashtra · Joined Mar 2025</p></div></div><div class="detail-content"><div class="profile-form"><label>Name<input id="pf-name" value="'+state.profile.name+'" /></label><label>Phone<input id="pf-phone" value="'+state.profile.phone+'" /></label><label>Email<input id="pf-email" value="'+state.profile.email+'" /></label><label class="wide">Address<input id="pf-address" value="'+state.profile.address+'" /></label><div class="save-row"><button class="secondary" onclick="resetProfile()">Cancel</button><button class="primary" onclick="saveProfile()">'+svg('check',16)+' Save Changes</button></div></div></div></section>';
+}
+function renderGeneric(p){
+  return '<div class="generic-page"><div class="empty-state"><div class="empty-icon">'+svg('settings',27)+'</div><h3>'+p+'</h3><p>Your VetWise information will appear here when it is available.</p></div></div>';
+}
+function stat(n,l,a){return '<div class="stat'+(a?' '+a:'')+'"><strong>'+n+'</strong><span>'+l+'</span></div>';}
+function renderModal(){
+  var mc=document.getElementById('modalContainer');
+  if(!state.modal){mc.innerHTML='';return;}
+  if(state.modal==='add-pet'){
+    mc.innerHTML=renderAddPetModal();
+  } else if(state.modal==='book-visit'){
+    mc.innerHTML=renderBookVisitModal();
+  } else {
+    mc.innerHTML='';
+  }
+}
+function renderAddPetModal(){
+  var breedOpts=breeds.map(function(b){return '<button type="button" onclick="selectBreed(\''+b.replace(/'/g,"\\'")+'\')">'+b+'</button>';}).join('');
+  return '<div class="modal-backdrop" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><div><p class="eyebrow">VETWISE</p><h2>Add a Pet</h2></div><button class="icon-btn" onclick="closeModal()">'+svg('x',18)+'</button></div><div class="form-grid"><label>Pet Name<input id="pet-name" placeholder="Enter pet name" /></label><label>Species<select id="pet-species"><option value="">Select species</option><option>Dog</option><option>Cat</option><option>Cattle</option><option>Horse</option><option>Goat</option><option>Rabbit</option><option>Other</option></select></label><label class="breed-suggestions">Breed<div style="position:relative"><input id="pet-breed" placeholder="Search or type breed" oninput="filterBreeds(this.value)" onfocus="showBreeds()" /><div class="breed-list" id="breedList">'+breedOpts+'</div></div></label><label>Sex<select id="pet-sex"><option value="">Select sex</option><option>Male</option><option>Female</option></select></label><label>Color<input id="pet-color" placeholder="e.g. Golden, Black & White" /></label><label>Age / DOB<input id="pet-age" placeholder="e.g. 3y 2m or 2023-07-15" /></label><label>Weight<input id="pet-weight" placeholder="e.g. 28.5 kg" /></label><label>Identification (optional)<input id="pet-id" placeholder="Microchip or tag number" /></label><label class="wide">Notes<textarea id="pet-notes" placeholder="Any additional information about your pet"></textarea></label></div><p style="font-size:11px;color:#8290a5;margin:0 0 14px">This pet will be registered to your account. You cannot assign pets to another owner.</p><div class="modal-actions"><button class="secondary" onclick="closeModal()">Cancel</button><button class="primary" onclick="submitPet()">'+svg('check',16)+' Add Pet</button></div></div></div>';
+}
+function renderBookVisitModal(){
+  var petOpts=myPets.map(function(p){return '<option>'+p.name+'</option>';}).join('');
+  return '<div class="modal-backdrop" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><div><p class="eyebrow">VETWISE</p><h2>Book a Visit</h2></div><button class="icon-btn" onclick="closeModal()">'+svg('x',18)+'</button></div><div class="form-grid"><label>Pet<select id="visit-pet"><option value="">Select your pet</option>'+petOpts+'</select></label><label>Visit Type<select id="visit-type"><option value="">Select type</option><option>Home Visit</option><option>Teleconsultation</option><option>Clinic Visit</option><option>Vaccination</option><option>Emergency</option></select></label><label>Preferred Date<input id="visit-date" type="date" /></label><label>Preferred Time<input id="visit-time" type="time" /></label><label class="wide">Reason<textarea id="visit-reason" placeholder="Briefly describe the reason for the visit"></textarea></label></div><div class="modal-actions"><button class="secondary" onclick="closeModal()">Cancel</button><button class="primary" onclick="submitVisit()">'+svg('check',16)+' Request Visit</button></div></div></div>';
+}
+function render(){renderSidebar();renderHeading();renderContent();renderModal();}
+window.navigate=function(p){state.page=p;state.selectedPet=null;render();};
+window.selectPet=function(i){state.selectedPet=i;render();};
+window.setPaymentTab=function(t){state.paymentTab=t;render();};
+window.openMobile=function(){document.getElementById('sidebar').classList.add('open');document.getElementById('scrim').style.display='block';};
+window.closeMobile=function(){document.getElementById('sidebar').classList.remove('open');document.getElementById('scrim').style.display='none';};
+window.openModal=function(t){state.modal=t;renderModal();};
+window.closeModal=function(){state.modal=null;renderModal();};
+window.selectBreed=function(b){var inp=document.getElementById('pet-breed');if(inp)inp.value=b;var bl=document.getElementById('breedList');if(bl)bl.classList.remove('open');};
+window.filterBreeds=function(v){
+  var bl=document.getElementById('breedList');if(!bl)return;
+  var filtered=breeds.filter(function(b){return b.toLowerCase().indexOf(v.toLowerCase())>=0;});
+  bl.innerHTML=filtered.map(function(b){return '<button type="button" onclick="selectBreed(\''+b.replace(/'/g,"\\'")+'\')">'+b+'</button>';}).join('');
+  bl.classList.add('open');
+};
+window.showBreeds=function(){var bl=document.getElementById('breedList');if(bl)bl.classList.add('open');};
+window.submitPet=function(){
+  var name=document.getElementById('pet-name').value.trim();
+  var species=document.getElementById('pet-species').value;
+  var breed=document.getElementById('pet-breed').value.trim();
+  var sex=document.getElementById('pet-sex').value;
+  var color=document.getElementById('pet-color').value.trim();
+  var age=document.getElementById('pet-age').value.trim();
+  var weight=document.getElementById('pet-weight').value.trim();
+  if(!name||!species||!breed||!sex){alert('Please fill in pet name, species, breed, and sex.');return;}
+  myPets.push({name:name,species:species,breed:breed,color:color||'Not specified',sex:sex,age:age||'Not specified',weight:weight||'Not specified',visits:0,lastVisit:'No visits yet'});
+  closeModal();render();
+  alert('Pet "'+name+'" has been added to your account. Note: Backend API integration is required for persistence. This pet will not persist after page reload until the API is connected.');
+};
+window.submitVisit=function(){
+  var pet=document.getElementById('visit-pet').value;
+  var type=document.getElementById('visit-type').value;
+  var date=document.getElementById('visit-date').value;
+  if(!pet||!type||!date){alert('Please select a pet, visit type, and date.');return;}
+  closeModal();
+  alert('Visit request submitted for '+pet+' on '+date+'. Note: Backend API integration is required to persist this request.');
+};
+window.saveProfile=function(){
+  state.profile.name=document.getElementById('pf-name').value;
+  state.profile.phone=document.getElementById('pf-phone').value;
+  state.profile.email=document.getElementById('pf-email').value;
+  state.profile.address=document.getElementById('pf-address').value;
+  render();
+  alert('Profile updated. Note: Backend API integration is required for persistence.');
+};
+window.resetProfile=function(){render();};
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.breed-suggestions')){var bl=document.getElementById('breedList');if(bl)bl.classList.remove('open');}
+});
+render();
+})();
+</script>
+</body>
+</html>

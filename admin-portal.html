@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#112b73" />
+<title>VetWise — Admin Portal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+:root{font-family:'DM Sans',sans-serif;color:#14203b;background:#f7f8fb;font-synthesis:none;text-rendering:optimizeLegibility}*{box-sizing:border-box}body{margin:0;min-width:320px}button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;background:none;color:inherit}
+.app-shell{min-height:100vh;background:#f7f8fb}
+.sidebar{position:fixed;z-index:10;inset:0 auto 0 0;width:224px;background:#112b73;color:#d6e0ff;display:flex;flex-direction:column}
+.brand{height:58px;padding:0 18px;display:flex;align-items:center;gap:10px;color:#fff;font-family:Manrope;font-size:18px;font-weight:800;border-bottom:1px solid #294486}
+.brand-mark{width:28px;height:28px;border-radius:6px;background:#5169a7;display:grid;place-items:center;color:#fff}
+.brand-mark svg{width:18px;height:18px}
+.portal-label{font-size:10px;letter-spacing:1.2px;font-weight:700;color:#8ea5e0;padding:24px 16px 13px}
+.sidebar nav{display:flex;flex-direction:column;gap:3px;padding:0 7px}
+.nav-item{display:flex;align-items:center;gap:13px;color:#cbd7fb;text-align:left;padding:11px 10px;border-radius:6px;font-size:14px;font-weight:600;transition:.2s;width:100%}
+.nav-item:hover,.nav-item.active{background:#425994;color:#fff}
+.nav-item svg{width:17px;height:17px;flex:none}
+.sidebar-bottom{margin-top:auto;border-top:1px solid #294486;padding:14px 10px 16px}
+.user-mini{display:flex;align-items:center;gap:10px;font-size:11px;color:#c6d2f7;margin-bottom:16px}
+.signout{display:flex;gap:10px;align-items:center;font-size:13px;color:#a9b9ed}
+.signout svg{width:15px;height:15px}
+.avatar{width:36px;height:36px;background:#e9edf5;color:#133174;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.avatar.small{width:27px;height:27px;background:#4964a7;color:#fff}
+.avatar.large{width:46px;height:46px;font-size:17px}
+.main-area{margin-left:224px;min-height:100vh}
+.topbar{height:52px;background:#fff;border-bottom:1px solid #e1e5eb;display:flex;justify-content:space-between;align-items:center;padding:0 18px;color:#60708b;font-size:12px}
+.top-actions{display:flex;gap:15px;align-items:center}
+.icon-btn{position:relative;display:grid;place-items:center;padding:4px;color:#243755}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn b{position:absolute;top:-2px;right:-4px;background:#ef4444;color:#fff;font-size:9px;width:15px;height:15px;border-radius:50%;display:grid;place-items:center}
+.profile-btn{display:flex;align-items:center;gap:8px}
+.profile-btn span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#112b73;color:white;font-weight:700}
+.profile-btn svg{width:14px;height:14px}
+.mobile-menu,.scrim{display:none}
+.page-wrap{max-width:1260px;padding:28px 26px 60px;margin:auto}
+.page-heading{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:12px}
+.page-heading h1{font-family:Manrope;margin:0;font-size:21px;letter-spacing:-.35px}
+.page-heading p{margin:4px 0 0;color:#73809a;font-size:13px}
+.primary,.secondary{display:inline-flex;gap:8px;align-items:center;justify-content:center;border-radius:6px;padding:10px 14px;font-size:13px;font-weight:700;transition:.2s}
+.primary{background:#112b73;color:#fff}
+.primary:hover{background:#24458f;transform:translateY(-1px)}
+.secondary{background:#fff;border:1px solid #dce2eb;color:#1b366f}
+.danger{background:#fff;border:1px solid #ffc7c7;color:#e73535}
+.danger:hover{background:#fff0f0}
+.approve{background:#0b9b55;color:#fff}
+.approve:hover{background:#08a85e}
+.primary svg,.secondary svg{width:16px;height:16px}
+.searchbar{height:38px;display:flex;align-items:center;gap:9px;padding:0 12px;border:1px solid #dfe4ec;border-radius:7px;background:#fff;color:#9aa7bc}
+.searchbar svg{width:17px;height:17px;flex:none}
+.searchbar input{border:0;outline:0;flex:1;color:#263a5f;font-size:13px;background:none}
+.searchbar input::placeholder{color:#a6b0c1}
+.stat{background:#fff;border:1px solid #dfe4eb;border-radius:7px;padding:16px 17px;display:flex;flex-direction:column;gap:5px}
+.stat strong{font-family:Manrope;font-size:21px;color:#152847}
+.stat span{color:#8290a2;font-size:12px}
+.stat.green strong{color:#0b9b55}
+.stat.orange strong{color:#dd8400}
+.stat.red strong{color:#e02828}
+.stat.blue strong{color:#3471da}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stats-row.four{grid-template-columns:repeat(4,1fr)}
+.eyebrow{display:block;color:#8290a9;font-size:10px;font-weight:700;letter-spacing:.8px;margin-bottom:6px}
+.table-card{overflow:hidden}
+.table-head,.table-row{display:grid;align-items:center;gap:12px;padding:12px 16px}
+.table-head{background:#fbfcfd;color:#8290a5;font-size:10px;font-weight:700;letter-spacing:.5px}
+.table-row{min-height:64px;border-top:1px solid #eef1f5;font-size:12px;color:#4e607a}
+.table-row strong{color:#162b4d;font-size:13px}
+.table-row div{display:flex;flex-direction:column;gap:3px}
+.table-row small{color:#99a5b6;font-size:10px}
+.status{font-size:9px;font-style:normal;font-weight:800;letter-spacing:.3px;border-radius:10px;padding:4px 7px;width:max-content}
+.paid,.confirmed,.active{color:#079653;background:#ebfff4;border:1px solid #b8efd2}
+.pending{color:#3575da;background:#edf5ff;border:1px solid #c7ddff}
+.overdue{color:#e73535;background:#fff0f0;border:1px solid #ffc7c7}
+.link{display:inline-flex;align-items:center;gap:4px;color:#1c438b;font-size:12px;font-weight:600}
+.link svg{width:13px;height:13px}
+.dashboard .welcome{background:#eaf1ff;border:1px solid #d3e1ff;border-radius:8px;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}
+.welcome h2{font-family:Manrope;font-size:19px;margin:0;color:#132f65}
+.welcome .eyebrow{color:#4365a3;margin-bottom:7px}
+.dashboard-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:16px}
+.panel{padding:18px;background:#fff;border:1px solid #dfe4eb;border-radius:7px}
+.panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.panel-title h3{font-family:Manrope;font-size:15px;margin:0}
+.simple-row{display:flex;align-items:center;gap:11px;border-top:1px solid #edf0f4;padding:12px 0}
+.simple-row>div:nth-child(2){display:flex;flex-direction:column;flex:1;gap:3px}
+.simple-row strong{font-size:12px}
+.simple-row small{font-size:11px;color:#8491a5}
+.pet-icon{width:37px;height:37px;border-radius:50%;background:#f2f4f7;color:#78849a;display:grid;place-items:center;flex:none}
+.pet-icon svg{width:19px;height:19px}
+.quick-action{display:flex;align-items:center;gap:10px;width:100%;padding:13px 0;border-top:1px solid #edf0f4;color:#3d5881;font-size:12px;text-align:left}
+.quick-action svg{width:16px;height:16px}
+.quick-action svg:last-child{margin-left:auto;width:14px;height:14px}
+.generic-page{min-height:400px;display:grid;place-items:center}
+.empty-state{text-align:center;color:#8290a6}
+.empty-state h3{color:#253b5c;margin:12px 0 6px;font-family:Manrope}
+.empty-state p{font-size:13px;max-width:360px;line-height:1.5;margin:0 auto 17px}
+.empty-state>svg{color:#a5b0c0;width:40px;height:40px}
+.empty-icon svg{width:27px;height:27px}
+.modal-backdrop{position:fixed;inset:0;background:#10244d66;display:grid;place-items:center;z-index:50;padding:18px}
+.modal{background:#fff;width:min(560px,100%);border-radius:10px;box-shadow:0 18px 55px #091b3a35;padding:22px;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;justify-content:space-between}
+.modal-head h2{margin:0;font-family:Manrope;font-size:19px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.form-grid label{font-size:11px;color:#687993;font-weight:700}
+.form-grid label.wide{grid-column:1/-1}
+.form-grid input,.form-grid textarea,.form-grid select{display:block;width:100%;border:1px solid #dce3ed;border-radius:6px;padding:10px;margin-top:6px;outline:0;font-size:13px;color:#263b60}
+.form-grid textarea{min-height:75px;resize:vertical}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px}
+.doctor-card{background:#fff;border:1px solid #dfe4eb;border-radius:7px;padding:18px;margin-bottom:12px;display:flex;gap:16px;align-items:flex-start}
+.doctor-card .doctor-info{flex:1}
+.doctor-card .doctor-info strong{font-size:15px}
+.doctor-card .doctor-info small{font-size:12px;color:#8290a2}
+.doctor-card .doctor-details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.doctor-card .doctor-details label{font-size:10px;color:#8290a9;font-weight:700;letter-spacing:.5px}
+.doctor-card .doctor-details strong{font-size:12px;font-weight:500;color:#243b62}
+.doctor-card .doctor-actions{display:flex;flex-direction:column;gap:8px;align-self:stretch}
+.doctor-card .doctor-actions button{padding:8px 14px;font-size:12px;font-weight:700;border-radius:6px;display:flex;align-items:center;gap:6px;justify-content:center}
+.doctor-card .doctor-actions button svg{width:14px;height:14px}
+.col5{grid-template-columns:1.2fr 1fr 1fr 1fr .8fr}
+.col6{grid-template-columns:1.15fr 1.5fr 1fr .8fr .8fr .6fr}
+.col4{grid-template-columns:1.2fr 1fr 1fr .8fr}
+@media(max-width:980px){.sidebar{width:205px}.main-area{margin-left:205px}.dashboard-grid{grid-template-columns:1fr}.table-card{overflow-x:auto}.col5,.col6,.col4{min-width:700px}}
+@media(max-width:680px){.sidebar{transform:translateX(-100%);transition:.22s;width:250px;box-shadow:12px 0 30px #091b3a40}.sidebar.open{transform:translateX(0)}.scrim{display:block;position:fixed;z-index:9;inset:0;background:#07163180}.main-area{margin-left:0}.mobile-menu{display:grid;place-items:center;color:#18366e}.mobile-menu svg{width:20px;height:20px}.topbar{padding:0 14px}.date{margin-right:auto;margin-left:12px}.page-wrap{padding:22px 14px 45px}.page-heading{gap:12px}.stats-row,.stats-row.four{grid-template-columns:1fr 1fr}.stat{padding:13px}.stat strong{font-size:18px}.dashboard .welcome{display:block;padding:18px}.welcome .primary{margin-top:16px}.form-grid{grid-template-columns:1fr}.form-grid label.wide{grid-column:auto}.doctor-card{flex-wrap:wrap}.doctor-card .doctor-details{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark" id="brandIcon"></div><span>VetWise</span></div>
+    <div class="portal-label" id="portalLabel">ADMIN PORTAL</div>
+    <nav id="nav"></nav>
+    <div class="sidebar-bottom">
+      <div class="user-mini"><div class="avatar small" id="userAvatar">A</div><span id="userName">Administrator</span></div>
+      <button class="signout" onclick="location.href='login.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" onclick="closeMobile()"></div>
+  <main class="main-area">
+    <header class="topbar">
+      <button class="mobile-menu" onclick="openMobile()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+      <span class="date">Sun, 28 Sept, 2026</span>
+      <div class="top-actions">
+        <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b id="notifBadge">3</b></button>
+        <button class="profile-btn"><span>A</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      </div>
+    </header>
+    <div class="page-wrap">
+      <div class="page-heading">
+        <div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Practice overview and system health</p></div>
+        <div class="heading-actions" id="headingActions"></div>
+      </div>
+      <div id="content"></div>
+    </div>
+  </main>
+  <div id="modalContainer"></div>
+</div>
+<script>
+(function(){
+var nav=[
+  {label:'Dashboard',icon:'dashboard'},{label:'Doctor Approval',icon:'shield'},
+  {label:'Doctors',icon:'stethoscope'},{label:'Clients',icon:'users'},
+  {label:'Patients',icon:'pawprint'},{label:'Appointments',icon:'calendar'},
+  {label:'Payments',icon:'dollar'},{label:'Subscriptions',icon:'shield'},
+  {label:'Notifications',icon:'bell'},{label:'Settings',icon:'settings'}
+];
+var IC={
+  stethoscope:'<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 1.5 3.96L5 14.5V20a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5.5l1.5-.54A6 6 0 0 0 22 9V5a2 2 0 0 0-2-2h-1"/><path d="M5 6a6 6 0 0 1 6 6"/>',
+  dashboard:'<rect width="7" height="9" x="1" y="1" rx="1"/><rect width="7" height="5" x="1" y="12" rx="1"/><rect width="7" height="9" x="14" y="1" rx="1"/><rect width="7" height="5" x="14" y="12" rx="1"/>',
+  calendar:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  pawprint:'<circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="4" cy="8" r="2"/><circle cx="11" cy="12" r="2"/><path d="M5 10v.5A6 6 0 0 0 11 16a6 6 0 0 0 6-5.5V10"/>',
+  dollar:'<circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M15 9.5a2.5 2.5 0 0 0-3-2.5c-1.5 0-3 1.5-3 3.5s1.5 3 3 3 3 1.5 3 3-1.5 3.5-3 3.5a2.5 2.5 0 0 1-3-2.5"/>',
+  shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  settings:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  arrowup:'<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+  activity:'<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
+  filetext:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
+  ban:'<circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/>'
+};
+function svg(n,s){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:'+(s||16)+'px;height:'+(s||16)+'px">'+(IC[n]||'')+'</svg>';}
+var pendingDoctors=[
+  {name:'Dr. Meera Iyer',email:'meera@vetwise.com',phone:'+91 9811122334',specialty:'Small Animal Medicine',license:'KAR-VC-2019-4521',experience:'8 years',clinic:'Bengaluru Pet Clinic',applied:'25 Sept 2026'},
+  {name:'Dr. Rohan Gupta',email:'rohan@vetwise.com',phone:'+91 9822334455',specialty:'Equine Surgery',license:'RAJ-VC-2020-8832',experience:'6 years',clinic:'Jaipur Equine Hospital',applied:'24 Sept 2026'}
+];
+var activeDoctors=[
+  {name:'Dr. Anita Rao',email:'anita@vetwise.com',phone:'+91 9800112233',specialty:'General Practice',license:'MAH-VC-2018-1234',experience:'10 years',joined:'12 Jan 2025'},
+  {name:'Dr. Vikram Sethi',email:'vikram@vetwise.com',phone:'+91 9800445566',specialty:'Surgery',license:'DEL-VC-2019-5678',experience:'7 years',joined:'3 Mar 2025'}
+];
+var allClients=[
+  {name:'Priya Sharma',email:'priya@demo.com',phone:'+91 9876543210',pets:'Bruno, Whiskers',status:'Active',joined:'18 Mar 2025'},
+  {name:'Ramesh Patel',email:'ramesh@demo.com',phone:'+91 9812345678',pets:'Nandi, Kali',status:'Active',joined:'22 Apr 2025'},
+  {name:'Suresh Kumar',email:'suresh@demo.com',phone:'+91 9800011122',pets:'Raja, Max',status:'Active',joined:'1 Jul 2025'},
+  {name:'Anita Desai',email:'anita@demo.com',phone:'+91 9844556677',pets:'Chotu',status:'Active',joined:'15 Aug 2025'},
+  {name:'Vikram Singh',email:'vikram@demo.com',phone:'+91 9899887766',pets:'Snowy',status:'Pending',joined:'15 Sept 2026'}
+];
+var allPatients=[
+  {name:'Bruno',species:'Dog',breed:'Labrador Retriever',owner:'Priya Sharma',visits:2},
+  {name:'Whiskers',species:'Cat',breed:'Persian',owner:'Priya Sharma',visits:1},
+  {name:'Nandi',species:'Cattle',breed:'Gir',owner:'Ramesh Patel',visits:0},
+  {name:'Kali',species:'Cattle',breed:'Murrah Buffalo',owner:'Ramesh Patel',visits:0},
+  {name:'Raja',species:'Horse',breed:'Marwari',owner:'Suresh Kumar',visits:0},
+  {name:'Chotu',species:'Goat',breed:'Beetal',owner:'Anita Desai',visits:0},
+  {name:'Snowy',species:'Rabbit',breed:'Angora',owner:'Vikram Singh',visits:0}
+];
+var allAppointments=[
+  {time:'09:00 AM',pet:'Bruno',client:'Priya Sharma',doctor:'Dr. Anita Rao',reason:'Vaccination',status:'Confirmed'},
+  {time:'10:30 AM',pet:'Whiskers',client:'Priya Sharma',doctor:'Dr. Anita Rao',reason:'Skin infection',status:'Confirmed'},
+  {time:'12:00 PM',pet:'Nandi',client:'Ramesh Patel',doctor:'Dr. Vikram Sethi',reason:'Routine check-up',status:'Pending'},
+  {time:'03:30 PM',pet:'Raja',client:'Suresh Kumar',doctor:'Dr. Vikram Sethi',reason:'Dental examination',status:'Confirmed'}
+];
+var allPayments=[
+  {client:'Priya Sharma',service:'Gold Plan — Annual Subscription',amount:'₹12,000',date:'1 Jan 2026',method:'UPI',status:'PAID'},
+  {client:'Priya Sharma',service:'Home Visit — Bruno (Vaccination)',amount:'₹800',date:'15 Sept 2026',method:'Card',status:'PAID'},
+  {client:'Priya Sharma',service:'Home Visit — Whiskers (Skin Infection)',amount:'₹1,200',date:'2 Sept 2026',method:'UPI',status:'PAID'},
+  {client:'Ramesh Patel',service:'Silver Plan — 6 Month Subscription',amount:'₹6,500',date:'1 Apr 2026',method:'Net Banking',status:'PAID'},
+  {client:'Suresh Kumar',service:'Platinum Plan — Annual Subscription',amount:'₹22,000',date:'1 Jul 2026',method:'UPI',status:'PAID'}
+];
+var allSubs=[
+  {client:'Priya Sharma',plan:'Gold Plan — Annual',price:'₹12,000',start:'1 Jan 2026',status:'Active'},
+  {client:'Ramesh Patel',plan:'Silver Plan — 6 Month',price:'₹6,500',start:'1 Apr 2026',status:'Active'},
+  {client:'Suresh Kumar',plan:'Platinum Plan — Annual',price:'₹22,000',start:'1 Jul 2026',status:'Active'},
+  {client:'Anita Desai',plan:'Bronze Plan — Monthly',price:'₹500',start:'1 Sept 2026',status:'Pending'}
+];
+var state={page:'Dashboard',modal:null,query:''};
+function subtitle(p){
+  var m={Dashboard:'Practice overview and system health','Doctor Approval':'Review and approve pending doctor applications',Doctors:'Active veterinarian accounts',Clients:'All registered clients',Patients:'All registered patients',Appointments:'All scheduled appointments',Payments:'All transaction records',Subscriptions:'Subscription plans and renewals',Notifications:'System alerts and announcements',Settings:'System configuration'};
+  return m[p]||'Manage your VetWise account';
+}
+function renderSidebar(){
+  document.getElementById('brandIcon').innerHTML=svg('stethoscope',18);
+  document.getElementById('nav').innerHTML=nav.map(function(n){
+    var badge=n.label==='Doctor Approval'&&pendingDoctors.length>0?' <b>'+pendingDoctors.length+'</b>':'';
+    return '<button class="nav-item'+(state.page===n.label?' active':'')+'" onclick="navigate(\''+n.label+'\')">'+svg(n.icon,17)+'<span>'+n.label+'</span></button>';
+  }).join('');
+}
+function renderHeading(){
+  document.getElementById('pageTitle').textContent=state.page;
+  document.getElementById('pageSubtitle').textContent=subtitle(state.page);
+  var ha=document.getElementById('headingActions');
+  ha.innerHTML='';
+}
+function renderContent(){
+  var c=document.getElementById('content'),p=state.page;
+  if(p==='Dashboard')c.innerHTML=renderDashboard();
+  else if(p==='Doctor Approval')c.innerHTML=renderDoctorApproval();
+  else if(p==='Doctors')c.innerHTML=renderDoctors();
+  else if(p==='Clients')c.innerHTML=renderClients();
+  else if(p==='Patients')c.innerHTML=renderPatients();
+  else if(p==='Appointments')c.innerHTML=renderAppointments();
+  else if(p==='Payments')c.innerHTML=renderPayments();
+  else if(p==='Subscriptions')c.innerHTML=renderSubs();
+  else c.innerHTML=renderGeneric(p);
+}
+function renderDashboard(){
+  var pendingList=pendingDoctors.map(function(d){
+    return '<div class="simple-row"><div class="pet-icon">'+svg('stethoscope',16)+'</div><div><strong>'+d.name+'</strong><small>'+d.specialty+' · Applied '+d.applied+'</small></div><span class="status pending">PENDING</span></div>';
+  }).join('');
+  var recentPay=allPayments.slice(0,3).map(function(p){
+    return '<div class="simple-row"><div class="pet-icon">'+svg('dollar',16)+'</div><div><strong>'+p.client+'</strong><small>'+p.service+' · '+p.amount+'</small></div><span class="status paid">PAID</span></div>';
+  }).join('');
+  var qa=['Review doctor approvals','View all clients','System settings'].map(function(x){
+    var target=x.indexOf('doctor')>=0?'Doctor Approval':x.indexOf('client')>=0?'Clients':'Settings';
+    return '<button class="quick-action" onclick="navigate(\''+target+'\')">'+svg('activity',16)+x+svg('arrowup',14)+'</button>';
+  }).join('');
+  return '<div class="dashboard"><div class="welcome"><div><p class="eyebrow">ADMIN OVERVIEW</p><h2>Practice at a glance.</h2></div></div><div class="stats-row four">'+stat(activeDoctors.length+'','Active Doctors')+stat(pendingDoctors.length+'','Pending Approvals','orange')+stat(allClients.length+'','Clients')+stat(allPatients.length+'','Patients')+'</div><div class="stats-row">'+stat(allAppointments.length+'','Appointments')+stat('₹'+(allPayments.reduce(function(s,p){return s+parseInt(p.amount.replace(/[^0-9]/g,''));},0)).toLocaleString('en-IN'),'Total Revenue','green')+stat(allSubs.filter(function(s){return s.status==='Active';}).length+'','Active Subscriptions')+'</div><div class="dashboard-grid"><section class="panel"><div class="panel-title"><h3>Pending Doctor Approvals</h3><button class="link" onclick="navigate(\'Doctor Approval\')">View all '+svg('arrowup',14)+'</button></div>'+(pendingList||'<p style="color:#a4aebe;font-size:13px;padding:12px 0">No pending approvals.</p>')+'</section><section class="panel"><div class="panel-title"><h3>Recent Payments</h3></div>'+recentPay+'</section></div><div class="dashboard-grid"><section class="panel"><div class="panel-title"><h3>Quick Actions</h3></div>'+qa+'</section></div></div>';
+}
+function renderDoctorApproval(){
+  if(pendingDoctors.length===0){
+    return '<div class="empty-state">'+svg('check',40)+'<h3>No pending approvals</h3><p>All doctor applications have been reviewed.</p></div>';
+  }
+  var cards=pendingDoctors.map(function(d,i){
+    return '<div class="doctor-card"><div class="pet-icon">'+svg('stethoscope',19)+'</div><div class="doctor-info"><strong>'+d.name+'</strong><br><small>'+d.specialty+' · Applied '+d.applied+'</small><div class="doctor-details"><div><label>EMAIL</label><strong>'+d.email+'</strong></div><div><label>PHONE</label><strong>'+d.phone+'</strong></div><div><label>LICENSE</label><strong>'+d.license+'</strong></div><div><label>EXPERIENCE</label><strong>'+d.experience+'</strong></div><div><label>CLINIC</label><strong>'+d.clinic+'</strong></div></div></div><div class="doctor-actions"><button class="approve" onclick="approveDoctor('+i+')">'+svg('check',14)+' Approve</button><button class="danger" onclick="rejectDoctor('+i+')">'+svg('ban',14)+' Reject</button></div></div>';
+  }).join('');
+  return '<div class="panel" style="margin-bottom:16px"><div class="panel-title"><h3>Pending Doctor Applications</h3><span class="status pending">'+pendingDoctors.length+' PENDING</span></div></div>'+cards;
+}
+function renderDoctors(){
+  var rows=activeDoctors.map(function(d){
+    return '<div class="table-row"><div><strong>'+d.name+'</strong><small>'+d.email+'</small></div><div><span>'+d.specialty+'</span></div><div><span>'+d.license+'</span></div><div><span>'+d.joined+'</span></div><span class="status active">ACTIVE</span></div>';
+  }).join('');
+  return '<div class="stats-row">'+stat(activeDoctors.length+'','Active Doctors')+stat('2','Specialties')+stat('0','Suspended')+'</div><div class="table-card"><div class="table-head col4"><span>NAME</span><span>SPECIALTY</span><span>LICENSE</span><span>JOINED</span></div>'+rows+'</div>';
+}
+function renderClients(){
+  var rows=allClients.map(function(c){
+    return '<div class="table-row"><div><strong>'+c.name+'</strong><small>'+c.email+'</small></div><div><span>'+c.phone+'</span></div><div><span>'+c.pets+'</span></div><div><span>'+c.joined+'</span></div><span class="status '+c.status.toLowerCase()+'">'+c.status.toUpperCase()+'</span></div>';
+  }).join('');
+  return '<div class="searchbar" style="margin-bottom:14px">'+svg('search',17)+'<input placeholder="Search clients by name, email, phone..."></div><div class="stats-row">'+stat(allClients.length+'','Total Clients')+stat(allClients.filter(function(c){return c.status==='Active';}).length+'','Active','green')+stat(allClients.filter(function(c){return c.status==='Pending';}).length+'','Pending','orange')+'</div><div class="table-card"><div class="table-head col5"><span>NAME</span><span>PHONE</span><span>PETS</span><span>JOINED</span><span>STATUS</span></div>'+rows+'</div>';
+}
+function renderPatients(){
+  var rows=allPatients.map(function(p){
+    return '<div class="table-row"><div><strong>'+p.name+'</strong><small>'+p.species+'</small></div><div><span>'+p.breed+'</span></div><div><span>'+p.owner+'</span></div><div><span>'+p.visits+' '+(p.visits===1?'visit':'visits')+'</span></div><span class="status active">REGISTERED</span></div>';
+  }).join('');
+  return '<div class="searchbar" style="margin-bottom:14px">'+svg('search',17)+'<input placeholder="Search patients by name, species, breed, owner..."></div><div class="stats-row">'+stat(allPatients.length+'','Total Patients')+stat(allPatients.filter(function(p){return p.species==='Dog';}).length+'','Dogs')+stat(allPatients.filter(function(p){return p.species==='Cat';}).length+'','Cats')+'</div><div class="table-card"><div class="table-head col5"><span>NAME</span><span>BREED</span><span>OWNER</span><span>VISITS</span><span>STATUS</span></div>'+rows+'</div>';
+}
+function renderAppointments(){
+  var rows=allAppointments.map(function(a){
+    return '<div class="table-row"><div><strong>'+a.time+'</strong></div><div><strong>'+a.pet+'</strong><small>'+a.client+'</small></div><div><span>'+a.doctor+'</span></div><div><span>'+a.reason+'</span></div><span class="status '+a.status.toLowerCase()+'">'+a.status.toUpperCase()+'</span></div>';
+  }).join('');
+  return '<div class="stats-row">'+stat(allAppointments.length+'','Total Today')+stat(allAppointments.filter(function(a){return a.status==='Confirmed';}).length+'','Confirmed','green')+stat(allAppointments.filter(function(a){return a.status==='Pending';}).length+'','Pending','orange')+'</div><div class="table-card"><div class="table-head col5"><span>TIME</span><span>PET / CLIENT</span><span>DOCTOR</span><span>REASON</span><span>STATUS</span></div>'+rows+'</div>';
+}
+function renderPayments(){
+  var rows=allPayments.map(function(p){
+    return '<div class="table-row"><div><strong>'+p.client+'</strong></div><div><span>'+p.service+'</span><small>'+p.method+'</small></div><strong>'+p.amount+'</strong><span>'+p.date+'</span><span class="status paid">PAID</span></div>';
+  }).join('');
+  var total=allPayments.reduce(function(s,p){return s+parseInt(p.amount.replace(/[^0-9]/g,''));},0);
+  return '<div class="stats-row">'+stat('₹'+total.toLocaleString('en-IN'),'Total Revenue','green')+stat('0','Pending','orange')+stat(allPayments.length+'','Transactions')+'</div><div class="table-card"><div class="table-head col5"><span>CLIENT</span><span>SERVICE</span><span>AMOUNT</span><span>DATE</span><span>STATUS</span></div>'+rows+'</div>';
+}
+function renderSubs(){
+  var rows=allSubs.map(function(s){
+    return '<div class="table-row"><div><strong>'+s.client+'</strong></div><div><span>'+s.plan+'</span></div><strong>'+s.price+'</strong><span>'+s.start+'</span><span class="status '+s.status.toLowerCase()+'">'+s.status.toUpperCase()+'</span></div>';
+  }).join('');
+  return '<div class="stats-row">'+stat(allSubs.filter(function(s){return s.status==='Active';}).length+'','Active','green')+stat(allSubs.filter(function(s){return s.status==='Pending';}).length+'','Pending','orange')+stat('₹41,000','MRR','green')+'</div><div class="table-card"><div class="table-head col5"><span>CLIENT</span><span>PLAN</span><span>PRICE</span><span>START DATE</span><span>STATUS</span></div>'+rows+'</div>';
+}
+function renderGeneric(p){
+  return '<div class="generic-page"><div class="empty-state"><div class="empty-icon">'+svg('settings',27)+'</div><h3>'+p+'</h3><p>System management tools will appear here.</p></div></div>';
+}
+function stat(n,l,a){return '<div class="stat'+(a?' '+a:'')+'"><strong>'+n+'</strong><span>'+l+'</span></div>';}
+function renderModal(){
+  var mc=document.getElementById('modalContainer');
+  if(!state.modal){mc.innerHTML='';return;}
+  if(state.modal==='reject-doctor'){
+    mc.innerHTML='<div class="modal-backdrop" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><div><p class="eyebrow">VETWISE ADMIN</p><h2>Reject Doctor Application</h2></div><button class="icon-btn" onclick="closeModal()">'+svg('x',18)+'</button></div><div class="form-grid"><label class="wide">Reason for rejection<textarea id="reject-reason" placeholder="Provide a reason for rejecting this application"></textarea></label></div><div class="modal-actions"><button class="secondary" onclick="closeModal()">Cancel</button><button class="danger" onclick="confirmReject()">'+svg('ban',16)+' Confirm Rejection</button></div></div></div>';
+  } else {
+    mc.innerHTML='';
+  }
+}
+function render(){renderSidebar();renderHeading();renderContent();renderModal();}
+window.navigate=function(p){state.page=p;render();};
+window.openMobile=function(){document.getElementById('sidebar').classList.add('open');document.getElementById('scrim').style.display='block';};
+window.closeMobile=function(){document.getElementById('sidebar').classList.remove('open');document.getElementById('scrim').style.display='none';};
+window.closeModal=function(){state.modal=null;renderModal();};
+window.approveDoctor=function(i){
+  var d=pendingDoctors[i];
+  activeDoctors.push({name:d.name,email:d.email,phone:d.phone,specialty:d.specialty,license:d.license,experience:d.experience,joined:'28 Sept 2026'});
+  pendingDoctors.splice(i,1);
+  render();
+  alert('Doctor "'+d.name+'" has been approved and is now active.\n\nNote: Backend API integration is required for persistence. This approval will not persist after page reload.');
+};
+window.rejectDoctor=function(i){
+  state.rejectIndex=i;
+  state.modal='reject-doctor';
+  renderModal();
+};
+window.confirmReject=function(){
+  var reason=document.getElementById('reject-reason').value;
+  var d=pendingDoctors[state.rejectIndex];
+  pendingDoctors.splice(state.rejectIndex,1);
+  state.rejectIndex=null;
+  closeModal();
+  render();
+  alert('Application from "'+d.name+'" has been rejected.\n\nNote: Backend API integration is required for persistence.');
+};
+render();
+})();
+</script>
+</body>
+</html>

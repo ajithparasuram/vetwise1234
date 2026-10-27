@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#112b73" />
+<title>VetWise — Sign In</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+:root{font-family:'DM Sans',sans-serif;color:#14203b;background:#f7f8fb;font-synthesis:none;text-rendering:optimizeLegibility}*{box-sizing:border-box}body{margin:0;min-width:320px}button,input,textarea{font:inherit}button{cursor:pointer;border:0;background:none;color:inherit}
+.login-screen{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:#fff}
+.login-art{background:#112b73;position:relative;padding:32px 9%;overflow:hidden}
+.brand{height:58px;padding:0 18px;display:flex;align-items:center;gap:10px;color:#fff;font-family:Manrope;font-size:18px;font-weight:800}
+.brand.light{border:0;padding:0}
+.brand.dark{border:0;padding:0;color:#142b60}
+.brand-mark{width:28px;height:28px;border-radius:6px;background:#5169a7;display:grid;place-items:center;color:#fff}
+.brand-mark svg{width:18px;height:18px}
+.art-copy{position:absolute;top:34%;max-width:390px;color:#fff}
+.eyebrow{display:block;color:#8290a9;font-size:10px;font-weight:700;letter-spacing:.8px;margin-bottom:6px}
+.art-copy .eyebrow{color:#8ea5e0}
+.art-copy h1{font-family:Manrope;font-size:43px;line-height:1.08;margin:0 0 16px}
+.art-copy p:last-child{color:#cad8fb;line-height:1.6}
+.art-orbit{position:absolute;width:230px;height:230px;border:1px solid #6581c8;border-radius:50%;right:-54px;bottom:13%;display:grid;place-items:center;color:#98b2fa}
+.art-orbit svg{width:38px;height:38px}
+.login-panel{display:grid;place-items:center;padding:32px}
+.login-box{width:min(390px,100%)}
+.login-box .brand{margin-bottom:50px}
+.login-box h2{font-family:Manrope;margin:0;font-size:27px}
+.login-box>p{margin:7px 0 22px;color:#8290a5;font-size:13px}
+.login-box>label{display:block;color:#60708a;font-weight:600;font-size:12px;margin-top:15px}
+.login-box input{display:block;width:100%;border:1px solid #dce3ed;border-radius:6px;padding:10px;margin-top:6px;outline:0;font-size:13px;color:#263b60}
+.password{position:relative}
+.password button{position:absolute;right:10px;top:16px;color:#1b438c;font-size:11px;font-weight:700}
+.role-switch{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#f3f5f8;border-radius:6px;padding:4px}
+.role-switch button{padding:7px 3px;border-radius:4px;font-size:10px;color:#74819a}
+.role-switch button.active{background:#fff;box-shadow:0 1px 4px #162b4d1a;color:#183b83;font-weight:700}
+.login-options{display:flex;justify-content:space-between;align-items:center;margin:13px 0 20px}
+.check{display:flex;align-items:center;gap:5px;color:#77859b;font-size:11px}
+.check input{width:auto;margin:0}
+.primary{display:inline-flex;gap:8px;align-items:center;justify-content:center;border-radius:6px;padding:10px 14px;font-size:13px;font-weight:700;transition:.2s;background:#112b73;color:#fff}
+.primary:hover{background:#24458f;transform:translateY(-1px)}
+.full{width:100%;padding:12px}
+.link{display:inline-flex;align-items:center;gap:4px;color:#1c438b;font-size:12px;font-weight:600}
+.signup{text-align:center;margin:17px 0!important;font-size:13px;color:#8290a5}
+
+@media(max-width:680px){.login-screen{grid-template-columns:1fr}.login-art{min-height:240px;padding:24px}.art-copy{position:relative;top:auto;margin-top:55px}.art-copy h1{font-size:29px}.art-copy p:last-child{font-size:12px}.art-orbit{width:120px;height:120px;right:-35px;bottom:-40px}.login-panel{padding:30px 22px}.login-box .brand{margin-bottom:32px}}
+</style>
+</head>
+<body>
+<div class="login-screen">
+  <div class="login-art">
+    <div class="brand light"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 1.5 3.96L5 14.5V20a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5.5l1.5-.54A6 6 0 0 0 22 9V5a2 2 0 0 0-2-2h-1"/><path d="M5 6a6 6 0 0 1 6 6"/></svg></div><span>VetWise</span></div>
+    <div class="art-copy">
+      <p class="eyebrow">CARE, CONNECTED</p>
+      <h1>Better care for every patient.</h1>
+      <p>One calm workspace for veterinary teams and the people who love their pets.</p>
+    </div>
+    <div class="art-orbit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="4" cy="8" r="2"/><circle cx="11" cy="12" r="2"/><path d="M5 10v.5A6 6 0 0 0 11 16a6 6 0 0 0 6-5.5V10"/></svg></div>
+  </div>
+  <div class="login-panel">
+    <div class="login-box">
+      <div class="brand dark"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 1.5 3.96L5 14.5V20a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5.5l1.5-.54A6 6 0 0 0 22 9V5a2 2 0 0 0-2-2h-1"/><path d="M5 6a6 6 0 0 1 6 6"/></svg></div><span>VetWise</span></div>
+      <h2>Welcome back</h2>
+      <p>Sign in to continue to your portal.</p>
+      <div class="role-switch" id="roleSwitch">
+        <button class="active" data-role="doctor">Doctor</button>
+        <button data-role="client">Client</button>
+        <button data-role="admin">Admin</button>
+        <button data-role="frontdesk">Front Desk</button>
+      </div>
+      <label>Email or phone<input placeholder="you@example.com" /></label>
+      <label>Password<div class="password"><input type="password" placeholder="Enter your password" id="pwField" /><button id="pwToggle">Show</button></div></label>
+      <div class="login-options">
+        <label class="check"><input type="checkbox" /> Remember me</label>
+        <button class="link">Forgot password?</button>
+      </div>
+      <button class="primary full" id="signInBtn">Sign in</button>
+      <p class="signup">New to VetWise? <button class="link">Create an account</button></p>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var role='doctor';
+  var rs=document.getElementById('roleSwitch');
+  rs.querySelectorAll('button').forEach(function(b){
+    b.onclick=function(){
+      rs.querySelectorAll('button').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');
+      role=b.dataset.role;
+    };
+  });
+  var pwf=document.getElementById('pwField'),pwt=document.getElementById('pwToggle');
+  pwt.onclick=function(){
+    if(pwf.type==='password'){pwf.type='text';pwt.textContent='Hide';}
+    else{pwf.type='password';pwt.textContent='Show';}
+  };
+  function signIn(){
+    var portals={'doctor':'doctor-portal.html','client':'client-portal.html','admin':'admin-portal.html','frontdesk':'front-desk-portal.html'};
+    window.location.href=portals[role];
+  }
+  document.getElementById('signInBtn').onclick=signIn;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "vetwise-infrastructure",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VetWise AWS CDK infrastructure — Cognito, DynamoDB, Lambda, API Gateway, S3, Secrets Manager",
+  "scripts": {
+    "build": "tsc",
+    "cdk": "cdk",
+    "deploy:staging": "cdk deploy VetWiseStack --stage staging",
+    "deploy:production": "cdk deploy VetWiseStack --stage production",
+    "diff:staging": "cdk diff VetWiseStack --stage staging",
+    "destroy:staging": "cdk destroy VetWiseStack --stage staging",
+    "synth": "cdk synth VetWiseStack --stage staging"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "aws-cdk": "^2.161.0",
+    "typescript": "^5.6.2"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.161.0",
+    "constructs": "^10.4.2"
+  }
+}

@@ -1,0 +1,101 @@
+name: Build Android APKs
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-client-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platforms;android-36
+            build-tools;35.0.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build client app
+        run: npm run build:client
+
+      - name: Sync Capacitor (client)
+        run: npx cap sync android -c capacitor.config.client.ts
+
+      - name: Build Client Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload client APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: vetwise-client-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 90
+          if-no-files-found: error
+
+  build-staff-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platforms;android-36
+            build-tools;35.0.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build staff app
+        run: npm run build:staff
+
+      - name: Sync Capacitor (staff)
+        run: npx cap sync android -c capacitor.config.staff.ts
+
+      - name: Build Staff Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload staff APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: vetwise-staff-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 90
+          if-no-files-found: error
