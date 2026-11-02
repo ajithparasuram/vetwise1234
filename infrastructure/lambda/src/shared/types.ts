@@ -9,7 +9,17 @@ export type ResourceType =
   | 'owner' | 'pet' | 'appointment' | 'clinicalRecord'
   | 'prescription' | 'payment' | 'subscription' | 'doctor'
   | 'notification' | 'plan' | 'organization' | 'serviceArea'
-  | 'contactEnquiry' | 'auditLog';
+  | 'contactEnquiry' | 'auditLog' | 'device';
+
+export interface Device {
+  deviceId: string;
+  userId: string;
+  fcmToken: string;
+  platform: string;
+  appVersion?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface AuthContext {
   sub: string;
@@ -127,6 +137,7 @@ export interface Payment {
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignatureVerified: boolean;
+  refund?: { amount: number; status: string; initiatedAt: string; reason?: string };
   createdAt: string;
   updatedAt: string;
 }

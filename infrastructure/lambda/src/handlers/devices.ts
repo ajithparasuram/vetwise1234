@@ -16,16 +16,7 @@ import { success, badRequest, forbidden, notFound, internalError, parseBody, get
 import { requireAuth } from '../shared/auth';
 import { putItem, getItem, queryByIndex, deleteItem, uuid, now } from '../shared/db';
 import { sanitizeString } from '../shared/validation';
-
-export interface Device {
-  deviceId: string;
-  userId: string;
-  fcmToken: string;
-  platform: string;
-  appVersion?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Device } from '../shared/types';
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   const method = event.httpMethod;
