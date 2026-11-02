@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "VetWise",
+    "slug": "vetwise-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "vetwise",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.vetwise.mobile",
+      "adaptiveIcon": { "backgroundColor": "#0D8060" },
+      "softwareKeyboardLayoutMode": "pan",
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "POST_NOTIFICATIONS", "USE_BIOMETRIC"]
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-camera", { "cameraPermission": "VetWise uses your camera for pet photos and medical documents." }],
+      ["expo-image-picker", { "photosPermission": "VetWise uses your photos for pet profiles and medical documents." }],
+      ["expo-location", { "locationWhenInUsePermission": "VetWise uses your location to check house-call serviceability." }],
+      ["expo-notifications", { "color": "#0D9B6A" }]
+    ],
+    "extra": { "apiBaseUrl": "https://7fcg51215k.execute-api.us-east-1.amazonaws.com/staging" }
+  }
+}
