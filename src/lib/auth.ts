@@ -100,6 +100,49 @@ export async function sendOtp(
   }
 }
 
+export async function sendWhatsappOtp(
+  phone: string,
+  purpose: 'login' | 'register',
+): Promise<{ otpId: string | null; expiresAt: string | null; error: string | null }> {
+  try {
+    const result = await api.sendWhatsappOtp({ phone, purpose });
+    return { otpId: result.otpId, expiresAt: result.expiresAt, error: null };
+  } catch (err) {
+    return { otpId: null, expiresAt: null, error: err instanceof Error ? err.message : 'Failed to send WhatsApp OTP' };
+  }
+}
+
+export async function verifyWhatsappOtp(params: {
+  otpId: string;
+  code: string;
+  phone: string;
+  purpose: 'login' | 'register';
+  registrationData?: { name: string; email: string; role: Role };
+}): Promise<{ user: AuthUser | null; error: string | null }> {
+  try {
+    const result = await api.verifyWhatsappOtp(params);
+    storeSession({
+      accessToken: result.accessToken,
+      idToken: result.idToken,
+      refreshToken: result.refreshToken,
+      expiresIn: result.expiresIn,
+    });
+    const user = adaptUser(getStoredUser());
+    if (!user) return { user: null, error: 'Verification succeeded but we could not read your profile.' };
+    if (user.approvalStatus === 'pending') {
+      clearSession();
+      return { user: null, error: 'Your account is pending admin approval. You will be notified once approved.' };
+    }
+    if (user.approvalStatus === 'rejected') {
+      clearSession();
+      return { user: null, error: 'Your account application was rejected. Please contact support.' };
+    }
+    return { user, error: null };
+  } catch (err) {
+    return { user: null, error: err instanceof Error ? err.message : 'WhatsApp OTP verification failed' };
+  }
+}
+
 export async function verifyOtp(
   session: string,
   code: string,

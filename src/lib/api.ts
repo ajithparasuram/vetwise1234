@@ -91,6 +91,12 @@ export const api = {
   verifyOtp: (body: { session: string; code: string; identifier?: string }) =>
     request<AuthSession>('/auth/otp', { method: 'PUT', body: JSON.stringify(body) }),
 
+  sendWhatsappOtp: (body: { phone: string; purpose: 'login' | 'register' }) =>
+    request<{ otpId: string; message: string; expiresAt: string }>('/auth/whatsapp-otp', { method: 'POST', body: JSON.stringify(body) }),
+
+  verifyWhatsappOtp: (body: { otpId: string; code: string; phone: string; purpose: 'login' | 'register'; registrationData?: { name: string; email: string; role: Role } }) =>
+    request<AuthSession & { cognitoSub: string; role: Role; approvalStatus: string; isNewUser: boolean }>('/auth/whatsapp-otp/verify', { method: 'POST', body: JSON.stringify(body) }),
+
   forgotPassword: (body: { identifier: string }) =>
     request<{ message: string }>('/auth/forgot-password', { method: 'POST', body: JSON.stringify(body) }),
 

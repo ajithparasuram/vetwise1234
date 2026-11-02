@@ -10,6 +10,7 @@ import {
 import {
   type Role, type AuthUser,
   signUp as authSignUp, signInWithPassword, sendOtp as authSendOtp, verifyOtp as authVerifyOtp,
+  sendWhatsappOtp as authSendWhatsappOtp, verifyWhatsappOtp as authVerifyWhatsappOtp,
   signOut as authSignOut, getCurrentUser, onAuthStateChange,
 } from '@/lib/auth';
 import {
@@ -2629,23 +2630,33 @@ function RejectDoctorModal({ onClose }: { onClose: () => void }) {
 
 function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) => void; variant: AppVariant }) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [method, setMethod] = useState<'otp' | 'password'>('password');
+  const [method, setMethod] = useState<'whatsapp' | 'password'>('whatsapp');
   const allowedRoles = VARIANT_ROLES[variant];
   const [role, setRole] = useState<Role>(VARIANT_DEFAULT_ROLE[variant]);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpId, setOtpId] = useState<string | null>(null);
+  const [resendTimer, setResendTimer] = useState(0);
   const [signupName, setSignupName] = useState('');
   const [signupPhone, setSignupPhone] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPw, setSignupPw] = useState('');
   const [showSignupPw, setShowSignupPw] = useState(false);
+  const [waLoginPhone, setWaLoginPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState('');
 
-  const resetState = () => { setOtpSent(false); setOtp(['', '', '', '', '', '']); setError(''); };
+  const resetState = () => { setOtpSent(false); setOtp(['', '', '', '', '', '']); setOtpId(null); setError(''); setInfo(''); setResendTimer(0); };
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const t = setTimeout(() => setResendTimer((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendTimer]);
 
   const handleOtpChange = (i: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
@@ -2653,40 +2664,61 @@ function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) 
     next[i] = val;
     setOtp(next);
     if (val && i < 5) {
-      const el = document.getElementById(`otp-${i + 1}`);
+      const el = document.getElementById(`wa-otp-${i + 1}`);
       el?.focus();
     }
   };
 
   const handleOtpKey = (i: number, e: React.KeyboardEvent) => {
     if (e.key === 'Backspace' && !otp[i] && i > 0) {
-      const el = document.getElementById(`otp-${i - 1}`);
+      const el = document.getElementById(`wa-otp-${i - 1}`);
       el?.focus();
     }
   };
 
-  const sendOtp = async () => {
-    if (!identifier.trim()) { setError('Please enter your email.'); return; }
-    setError('');
-    setLoading(true);
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasted.length > 0) {
+      const next = ['', '', '', '', '', ''];
+      for (let j = 0; j < pasted.length && j < 6; j++) next[j] = pasted[j];
+      setOtp(next);
+      const lastFilled = Math.min(pasted.length, 5);
+      document.getElementById(`wa-otp-${lastFilled}`)?.focus();
+    }
+  };
+
+  const formatPhoneForWa = (raw: string): string => {
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length === 10) return `+91${digits}`;
+    if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
+    if (raw.startsWith('+')) return raw;
+    return raw;
+  };
+
+  const sendWhatsappOtpLogin = async () => {
+    if (!waLoginPhone.trim()) { setError('Please enter your mobile number.'); return; }
+    const phone = formatPhoneForWa(waLoginPhone);
+    setError(''); setInfo(''); setLoading(true);
     try {
-      const { error: otpError } = await authSendOtp(identifier.trim());
+      const { otpId: id, error: otpError } = await authSendWhatsappOtp(phone, 'login');
       if (otpError) throw new Error(otpError);
-      setOtpSent(true);
+      if (id) { setOtpId(id); setOtpSent(true); setResendTimer(60); setInfo('OTP sent via WhatsApp to ' + phone); }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send OTP');
+      setError(err instanceof Error ? err.message : 'Failed to send WhatsApp OTP');
     } finally {
       setLoading(false);
     }
   };
 
-  const verifyOtp = async () => {
+  const verifyWhatsappOtpLogin = async () => {
     const code = otp.join('');
     if (code.length !== 6) { setError('Please enter the 6-digit code.'); return; }
-    setError('');
-    setLoading(true);
+    if (!otpId) { setError('Please request an OTP first.'); return; }
+    setError(''); setLoading(true);
     try {
-      const { user, error: verifyError } = await authVerifyOtp(identifier.trim(), code);
+      const phone = formatPhoneForWa(waLoginPhone);
+      const { user, error: verifyError } = await authVerifyWhatsappOtp({ otpId, code, phone, purpose: 'login' });
       if (verifyError) throw new Error(verifyError);
       if (user) onSignIn(user.role, user);
     } catch (err) {
@@ -2696,11 +2728,50 @@ function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) 
     }
   };
 
+  const sendWhatsappOtpRegister = async () => {
+    if (!signupName.trim()) { setError('Please enter your name.'); return; }
+    if (!signupPhone.trim()) { setError('Phone number is required.'); return; }
+    if (signupPhone.replace(/\D/g, '').length < 10) { setError('Please enter a valid 10-digit mobile number.'); return; }
+    if (!signupEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupEmail)) { setError('Please enter a valid email address.'); return; }
+    if (!allowedRoles.includes(role)) { setError('This role is not available for this app.'); return; }
+    const phone = formatPhoneForWa(signupPhone);
+    setError(''); setInfo(''); setLoading(true);
+    try {
+      const { otpId: id, error: otpError } = await authSendWhatsappOtp(phone, 'register');
+      if (otpError) throw new Error(otpError);
+      if (id) { setOtpId(id); setOtpSent(true); setResendTimer(60); setInfo('OTP sent via WhatsApp to ' + phone + '. Enter the code to complete registration.'); }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send WhatsApp OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyWhatsappOtpRegister = async () => {
+    const code = otp.join('');
+    if (code.length !== 6) { setError('Please enter the 6-digit code.'); return; }
+    if (!otpId) { setError('Please request an OTP first.'); return; }
+    setError(''); setLoading(true);
+    try {
+      const phone = formatPhoneForWa(signupPhone);
+      const { user, error: verifyError } = await authVerifyWhatsappOtp({
+        otpId, code, phone, purpose: 'register',
+        registrationData: { name: signupName, email: signupEmail, role },
+      });
+      if (verifyError) throw new Error(verifyError);
+      if (user) onSignIn(user.role, user);
+      else { setMode('signin'); setError(''); setInfo('Account created successfully. Please sign in.'); resetState(); }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const passwordSignIn = async () => {
     if (!identifier.trim()) { setError('Please enter your email.'); return; }
     if (!password) { setError('Please enter your password.'); return; }
-    setError('');
-    setLoading(true);
+    setError(''); setInfo(''); setLoading(true);
     try {
       const { user, error: signInError } = await signInWithPassword(identifier.trim(), password);
       if (signInError) throw new Error(signInError);
@@ -2712,26 +2783,21 @@ function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) 
     }
   };
 
-  const signUp = async () => {
+  const passwordSignUp = async () => {
     if (!signupName.trim()) { setError('Please enter your name.'); return; }
     if (!signupPhone.trim()) { setError('Phone number is required.'); return; }
     if (signupPhone.replace(/\D/g, '').length < 10) { setError('Please enter a valid phone number.'); return; }
     if (!signupEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupEmail)) { setError('Please enter a valid email address.'); return; }
     if (!signupPw || signupPw.length < 8) { setError('Password must be at least 8 characters.'); return; }
     if (!allowedRoles.includes(role)) { setError('This role is not available for this app.'); return; }
-    setError('');
-    setLoading(true);
+    setError(''); setInfo(''); setLoading(true);
     try {
       const { user, error: signUpError } = await authSignUp({
-        email: signupEmail,
-        password: signupPw,
-        name: signupName,
-        phone: signupPhone,
-        role,
+        email: signupEmail, password: signupPw, name: signupName, phone: signupPhone, role,
       });
       if (signUpError) throw new Error(signUpError);
       if (user) onSignIn(user.role, user);
-      else { setMode('signin'); setIdentifier(signupEmail); setError('Account created. Please sign in.'); }
+      else { setMode('signin'); setIdentifier(signupEmail); setError(''); setInfo('Account created. Please sign in.'); }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -2750,20 +2816,22 @@ function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) 
         <div className="brand dark"><div className="brand-mark"><Stethoscope size={18} /></div><span>{VARIANT_THEME[variant].label}</span></div>
         {mode === 'signin' ? <>
           <h2>Welcome back</h2><p>{variant === 'client' ? 'Sign in to manage your pet\'s care.' : 'Sign in to continue to your portal.'}</p>
-          {allowedRoles.length > 1 && <div className="role-switch">{allowedRoles.map((r) => <button key={r} className={role === r ? 'active' : ''} onClick={() => { setRole(r); resetState(); }}>{r === 'frontdesk' ? 'Front Desk' : r[0].toUpperCase() + r.slice(1)}</button>)}</div>}
+          {allowedRoles.length > 1 && <div className="role-switch">{allowedRoles.map((r) => <button key={r} className={role === r ? 'active' : ''} onClick={() => { setRole(r); resetState(); setWaLoginPhone(''); }}>{r === 'frontdesk' ? 'Front Desk' : r[0].toUpperCase() + r.slice(1)}</button>)}</div>}
           <div className="method-toggle">
-            <button className={method === 'otp' ? 'active' : ''} onClick={() => { setMethod('otp'); resetState(); }}>OTP</button>
+            <button className={method === 'whatsapp' ? 'active' : ''} onClick={() => { setMethod('whatsapp'); resetState(); setWaLoginPhone(''); }}><Send size={13} /> WhatsApp OTP</button>
             <button className={method === 'password' ? 'active' : ''} onClick={() => { setMethod('password'); resetState(); }}>Password</button>
           </div>
           {error && <p className="login-error">{error}</p>}
-          {method === 'otp' ? <>
-            <label>Email<input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="you@example.com" /></label>
-            {otpSent ? <>
-              <label>Enter OTP<div className="otp-row">{otp.map((d, i) => <input key={i} id={`otp-${i}`} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleOtpKey(i, e)} maxLength={1} inputMode="numeric" />)}</div></label>
-              <p className="otp-hint">A 6-digit code was sent to {identifier}. <button className="link" onClick={() => { resetState(); }}>Resend / change</button></p>
-              <button className="primary full" onClick={verifyOtp} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Verify & Sign in'}</button>
+          {info && <p className="login-info">{info}</p>}
+          {method === 'whatsapp' ? <>
+            {!otpSent ? <>
+              <label>Mobile Number<input value={waLoginPhone} onChange={(e) => setWaLoginPhone(e.target.value)} placeholder="9876543210" inputMode="tel" /></label>
+              <p className="otp-hint" style={{ marginBottom: '12px' }}>Enter your 10-digit mobile number. We'll send a code via WhatsApp.</p>
+              <button className="primary full" onClick={sendWhatsappOtpLogin} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Send WhatsApp OTP'}</button>
             </> : <>
-              <button className="primary full" onClick={sendOtp} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Send OTP'}</button>
+              <label>Enter OTP<div className="otp-row" onPaste={handleOtpPaste}>{otp.map((d, i) => <input key={i} id={`wa-otp-${i}`} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleOtpKey(i, e)} maxLength={1} inputMode="numeric" />)}</div></label>
+              <p className="otp-hint">A 6-digit code was sent to {formatPhoneForWa(waLoginPhone)} via WhatsApp.{resendTimer > 0 ? ` Resend in ${resendTimer}s` : <button className="link" onClick={() => { resetState(); setWaLoginPhone(waLoginPhone); }}>Resend</button>}</p>
+              <button className="primary full" onClick={verifyWhatsappOtpLogin} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Verify & Sign in'}</button>
             </>}
           </> : <>
             <label>Email<input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="you@example.com" /></label>
@@ -2771,18 +2839,41 @@ function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) 
             <div className="login-options"><label className="check"><input type="checkbox" /> Remember me</label><button className="link">Forgot password?</button></div>
             <button className="primary full" onClick={passwordSignIn} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Sign in'}</button>
           </>}
-          <p className="signup">New to {VARIANT_THEME[variant].label}? <button className="link" onClick={() => { setMode('signup'); setError(''); }}>Create an account</button></p>
-
+          <p className="signup">New to {VARIANT_THEME[variant].label}? <button className="link" onClick={() => { setMode('signup'); resetState(); setError(''); setInfo(''); }}>Create an account</button></p>
         </> : <>
           <h2>Create your account</h2><p>{variant === 'client' ? 'Join to manage your pet\'s health, appointments, and more.' : 'Join VetWise to manage pet care in one place.'}</p>
-          {allowedRoles.length > 1 && <div className="role-switch">{allowedRoles.map((r) => <button key={r} className={role === r ? 'active' : ''} onClick={() => setRole(r)}>{r[0].toUpperCase() + r.slice(1)}</button>)}</div>}
+          {allowedRoles.length > 1 && <div className="role-switch">{allowedRoles.map((r) => <button key={r} className={role === r ? 'active' : ''} onClick={() => { setRole(r); resetState(); }}>{r[0].toUpperCase() + r.slice(1)}</button>)}</div>}
+          <div className="method-toggle">
+            <button className={method === 'whatsapp' ? 'active' : ''} onClick={() => { setMethod('whatsapp'); resetState(); }}><Send size={13} /> WhatsApp OTP</button>
+            <button className={method === 'password' ? 'active' : ''} onClick={() => { setMethod('password'); resetState(); }}>Password</button>
+          </div>
           {error && <p className="login-error">{error}</p>}
-          <label>Full Name<input value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Enter your name" /></label>
-          <label>Phone Number <span className="req">*</span><input value={signupPhone} onChange={(e) => setSignupPhone(e.target.value)} placeholder="+91 9876543210" /></label>
-          <label>Email <span className="req">*</span><input value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="you@example.com" /></label>
-          <label>Password<div className="password"><input type={showSignupPw ? 'text' : 'password'} value={signupPw} onChange={(e) => setSignupPw(e.target.value)} placeholder="At least 8 characters" /><button onClick={() => setShowSignupPw(!showSignupPw)}>{showSignupPw ? 'Hide' : 'Show'}</button></div></label>
-          <button className="primary full" onClick={signUp} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Create Account'}</button>
-          <p className="signup">Already have an account? <button className="link" onClick={() => { setMode('signin'); setError(''); }}>Sign in</button></p>
+          {info && <p className="login-info">{info}</p>}
+          {method === 'whatsapp' ? <>
+            {!otpSent ? <>
+              <label>Full Name<input value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Enter your name" /></label>
+              <label>Mobile Number <span className="req">*</span><input value={signupPhone} onChange={(e) => setSignupPhone(e.target.value)} placeholder="9876543210" inputMode="tel" /></label>
+              <label>Email <span className="req">*</span><input value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="you@example.com" /></label>
+              <p className="otp-hint" style={{ marginBottom: '12px' }}>Step 1: Enter your details. Step 2: Verify your WhatsApp number. Step 3: Complete registration.</p>
+              <button className="primary full" onClick={sendWhatsappOtpRegister} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Send WhatsApp OTP'}</button>
+            </> : <>
+              <div className="signup-otp-summary">
+                <div><strong>{signupName}</strong></div>
+                <div><small>{signupEmail}</small></div>
+                <div><small>{formatPhoneForWa(signupPhone)}</small></div>
+              </div>
+              <label>Enter OTP<div className="otp-row" onPaste={handleOtpPaste}>{otp.map((d, i) => <input key={i} id={`wa-otp-${i}`} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleOtpKey(i, e)} maxLength={1} inputMode="numeric" />)}</div></label>
+              <p className="otp-hint">A 6-digit code was sent to {formatPhoneForWa(signupPhone)} via WhatsApp. {resendTimer > 0 ? `Resend in ${resendTimer}s` : <button className="link" onClick={() => { resetState(); }}>Change number</button>}</p>
+              <button className="primary full" onClick={verifyWhatsappOtpRegister} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Verify & Create Account'}</button>
+            </>}
+          </> : <>
+            <label>Full Name<input value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Enter your name" /></label>
+            <label>Phone Number <span className="req">*</span><input value={signupPhone} onChange={(e) => setSignupPhone(e.target.value)} placeholder="9876543210" /></label>
+            <label>Email <span className="req">*</span><input value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="you@example.com" /></label>
+            <label>Password<div className="password"><input type={showSignupPw ? 'text' : 'password'} value={signupPw} onChange={(e) => setSignupPw(e.target.value)} placeholder="At least 8 characters" /><button onClick={() => setShowSignupPw(!showSignupPw)}>{showSignupPw ? 'Hide' : 'Show'}</button></div></label>
+            <button className="primary full" onClick={passwordSignUp} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Create Account'}</button>
+          </>}
+          <p className="signup">Already have an account? <button className="link" onClick={() => { setMode('signin'); resetState(); setError(''); setInfo(''); }}>Sign in</button></p>
         </>}
       </div>
     </div>
