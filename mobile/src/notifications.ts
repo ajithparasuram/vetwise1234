@@ -16,8 +16,8 @@ export async function registerForPushNotifications(): Promise<string | null> {
   }
   if (finalStatus !== 'granted') return null;
 
-  const tokenData = await Notifications.getExpoPushTokenAsync({ projectId: 'vetwise-mobile' });
-  const token = tokenData.data;
+  const tokenData = await Notifications.getDevicePushTokenAsync();
+  const token = String(tokenData.data);
 
   const session = await getSession();
   if (session?.accessToken) {

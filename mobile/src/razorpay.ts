@@ -1,10 +1,8 @@
 /**
  * Razorpay native checkout integration.
  *
- * Uses react-native-razorpay (react-native-razorpay v6+) which wraps the
- * Razorpay Android SDK. The SDK must be installed and linked:
- *
- *   npm install react-native-razorpay
+ * Uses react-native-razorpay which wraps the Razorpay Android SDK.
+ * Install it with: npm install react-native-razorpay
  *
  * The keyId comes from the backend (never hardcoded in the app). The
  * backend creates the order and returns orderId + keyId. After the
@@ -12,7 +10,7 @@
  * server-side signature verification.
  */
 
-import { Platform, Linking, Alert } from 'react-native';
+import { Platform, Alert } from 'react-native';
 
 export type RazorpayResult = {
   razorpayPaymentId: string;
@@ -32,33 +30,37 @@ export type RazorpayOptions = {
   theme: { color: string };
 };
 
-type RazorpayModule = {
-  open: (options: Record<string, unknown>, callback: (result: { razorpay_payment_id?: string; razorpay_order_id?: string; razorpay_signature?: string; error?: { code: number; description: string; source: string; step: string; reason: string } }) => void) => void;
+type RazorpayError = { code: number; description: string; source: string; step: string; reason: string };
+type RazorpayCallbackResult = {
+  razorpay_payment_id?: string;
+  razorpay_order_id?: string;
+  razorpay_signature?: string;
+  error?: RazorpayError;
+};
+type RazorpayModuleType = {
+  open: (options: Record<string, unknown>, callback: (result: RazorpayCallbackResult) => void) => void;
 };
 
-async function getRazorpayModule(): Promise<RazorpayModule | null> {
+function loadRazorpayModule(): RazorpayModuleType | null {
+  if (Platform.OS !== 'android') return null;
   try {
-    if (Platform.OS === 'android') {
-      const mod = await import('react-native-razorpay');
-      return mod.default ?? mod;
-    }
-    return null;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('react-native-razorpay');
+    return (mod.default ?? mod) as RazorpayModuleType;
   } catch {
     return null;
   }
 }
 
-export async function openRazorpayCheckout(options: RazorpayOptions): Promise<RazorpayResult> {
-  const mod = await getRazorpayModule();
+export function openRazorpayCheckout(options: RazorpayOptions): Promise<RazorpayResult> {
+  const mod = loadRazorpayModule();
 
   if (!mod) {
-    return new Promise((resolve, reject) => {
+    return new Promise((_resolve, reject) => {
       Alert.alert(
         'Razorpay SDK Required',
-        'The Razorpay React Native SDK is not installed. Install it with:\n\nnpm install react-native-razorpay\n\nThen rebuild the Android app. The backend order has been created — once the SDK is added, checkout will open automatically.',
-        [
-          { text: 'OK', onPress: () => reject(new Error('Razorpay SDK not installed')) },
-        ]
+        'The Razorpay React Native SDK is not installed.\n\nInstall it with: npm install react-native-razorpay\n\nThen rebuild the Android app. The backend order has already been created — once the SDK is added, checkout will open automatically.',
+        [{ text: 'OK', onPress: () => reject(new Error('Razorpay SDK not installed')) }]
       );
     });
   }
