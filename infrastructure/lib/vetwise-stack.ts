@@ -158,6 +158,10 @@ export class VetWiseStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: props.stage === 'staging' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
     });
+    this.tables.owners.addGlobalSecondaryIndex({
+      indexName: 'phoneIndex',
+      partitionKey: { name: 'phone', type: dynamodb.AttributeType.STRING },
+    });
 
     this.tables.pets = new dynamodb.Table(this, 'VetWisePets', {
       tableName: `${prefix}-Pets`,
@@ -242,6 +246,10 @@ export class VetWiseStack extends cdk.Stack {
       partitionKey: { name: 'doctorId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: props.stage === 'staging' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+    });
+    this.tables.doctors.addGlobalSecondaryIndex({
+      indexName: 'phoneIndex',
+      partitionKey: { name: 'phone', type: dynamodb.AttributeType.STRING },
     });
     this.tables.doctors.addGlobalSecondaryIndex({
       indexName: 'cognitoSubIndex',
