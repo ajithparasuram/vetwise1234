@@ -122,6 +122,67 @@ export type NotificationItem = {
   createdAt: string;
 };
 
+export type Plan = {
+  planId: string;
+  name: string;
+  price: number;
+  currency: string;
+  billingInterval: string;
+  duration?: string;
+  benefits: string[];
+  taxTreatment?: string;
+};
+
+export type SettingsResponse = {
+  brand: { name: string; company: string; supportEmail: string };
+  plans: Plan[];
+  serviceAreas: { areaId: string; name: string; type: string; serviceTypes: string[] }[];
+  features: Record<string, boolean>;
+  booking: { minAdvanceHours: number; maxAdvanceDays: number; cancellationWindowHours: number };
+};
+
+export type Subscription = {
+  subscriptionId: string;
+  ownerId: string;
+  planId: string;
+  razorpaySubscriptionId?: string;
+  price: number;
+  currency: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  benefits: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Payment = {
+  paymentId: string;
+  ownerId: string;
+  appointmentId?: string;
+  subscriptionId?: string;
+  service: string;
+  amount: number;
+  currency: string;
+  method?: string;
+  status: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignatureVerified?: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateOrderResponse = {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  paymentId: string;
+};
+
+export type VerifyPaymentResponse = { verified: boolean; paymentId: string };
+
 export const api = {
   // Auth (unauthed)
   sendOtp: (phone: string, purpose: 'login' | 'register') => unauthedRequest<{ otpId: string; expiresAt: string }>('/auth/whatsapp-otp', { method: 'POST', body: JSON.stringify({ phone: formatPhone(phone), purpose }) }),
@@ -152,6 +213,21 @@ export const api = {
 
   // Notifications
   getNotifications: () => authedRequest<NotificationItem[]>('/notifications'),
+
+  // Settings (plans, service areas, features)
+  getSettings: () => authedRequest<SettingsResponse>('/settings'),
+
+  // Subscriptions
+  getSubscriptions: () => authedRequest<Subscription[]>('/subscriptions'),
+  createSubscription: (planId: string, ownerId?: string) => authedRequest<Subscription>('/subscriptions', { method: 'POST', body: JSON.stringify({ planId, ownerId }) }),
+  getSubscription: (id: string) => authedRequest<Subscription>(`/subscriptions/${id}`),
+  cancelSubscription: (id: string) => authedRequest<Subscription>(`/subscriptions/${id}/cancel`, { method: 'POST' }),
+
+  // Payments
+  getPayments: () => authedRequest<Payment[]>('/payments'),
+  getPayment: (id: string) => authedRequest<Payment>(`/payments/${id}`),
+  createOrder: (resourceType: 'plan' | 'appointment', resourceId: string) => authedRequest<CreateOrderResponse>('/payments/orders', { method: 'POST', body: JSON.stringify({ resourceType, resourceId }) }),
+  verifyPayment: (body: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string; paymentId: string; method?: string }) => authedRequest<VerifyPaymentResponse>('/payments/verify', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 export function decodeUser(idToken: string): AuthUser | null {

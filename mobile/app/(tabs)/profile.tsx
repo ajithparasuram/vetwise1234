@@ -5,5 +5,44 @@ import { useAuth } from '@/auth';
 import { authenticateWithBiometrics } from '@/native';
 import { colors, radius, shadow, spacing } from '@/theme';
 
-export default function Profile() { const { user, logout } = useAuth(); const signOut = async () => { await logout(); router.replace('/(auth)/login'); }; return <ScrollView style={styles.root} contentContainerStyle={styles.content}><Text style={styles.kicker}>YOUR PROFILE</Text><View style={styles.profile}><View style={styles.avatar}><Text style={styles.avatarText}>{user?.name?.[0]?.toUpperCase() || 'V'}</Text></View><View style={{ flex: 1 }}><Text style={styles.name}>{user?.name || 'VetWise member'}</Text><Text style={styles.email}>{user?.email || 'Account details'}</Text></View><Ionicons name="chevron-forward" size={18} color={colors.muted} /></View><Text style={styles.section}>Account & security</Text><Pressable onPress={authenticateWithBiometrics} style={styles.row}><Ionicons name="finger-print-outline" size={21} color={colors.greenDeep} /><View style={{ flex: 1 }}><Text style={styles.rowTitle}>Biometric unlock</Text><Text style={styles.rowText}>Use your device security for a quicker return</Text></View><Ionicons name="chevron-forward" size={18} color={colors.muted} /></Pressable><Pressable style={styles.row}><Ionicons name="settings-outline" size={21} color={colors.greenDeep} /><View style={{ flex: 1 }}><Text style={styles.rowTitle}>Preferences</Text><Text style={styles.rowText}>Notifications, privacy, and app settings</Text></View><Ionicons name="chevron-forward" size={18} color={colors.muted} /></Pressable><Text style={styles.section}>Session</Text><Pressable onPress={signOut} style={[styles.row, styles.signout]}><Ionicons name="log-out-outline" size={21} color={colors.red} /><Text style={styles.signoutText}>Sign out of VetWise</Text></Pressable></ScrollView>; }
+export default function Profile() {
+  const { user, logout } = useAuth();
+  const signOut = async () => { await logout(); router.replace('/(auth)/login'); };
+  const isClient = user?.role === 'client';
+
+  return <ScrollView style={styles.root} contentContainerStyle={styles.content}>
+    <Text style={styles.kicker}>YOUR PROFILE</Text>
+    <View style={styles.profile}>
+      <View style={styles.avatar}><Text style={styles.avatarText}>{user?.name?.[0]?.toUpperCase() || 'V'}</Text></View>
+      <View style={{ flex: 1 }}><Text style={styles.name}>{user?.name || 'VetWise member'}</Text><Text style={styles.email}>{user?.email || 'Account details'}</Text></View>
+      <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+    </View>
+
+    <Text style={styles.section}>Account & security</Text>
+    <Pressable onPress={authenticateWithBiometrics} style={styles.row}>
+      <Ionicons name="finger-print-outline" size={21} color={colors.greenDeep} />
+      <View style={{ flex: 1 }}><Text style={styles.rowTitle}>Biometric unlock</Text><Text style={styles.rowText}>Use your device security for a quicker return</Text></View>
+      <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+    </Pressable>
+
+    {isClient && <Pressable onPress={() => router.push('/billing')} style={styles.row}>
+      <Ionicons name="card-outline" size={21} color={colors.greenDeep} />
+      <View style={{ flex: 1 }}><Text style={styles.rowTitle}>Billing & payments</Text><Text style={styles.rowText}>Subscription, payment history, and receipts</Text></View>
+      <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+    </Pressable>}
+
+    <Pressable onPress={() => router.push('/preferences/notifications')} style={styles.row}>
+      <Ionicons name="notifications-outline" size={21} color={colors.greenDeep} />
+      <View style={{ flex: 1 }}><Text style={styles.rowTitle}>Notification preferences</Text><Text style={styles.rowText}>Choose which alerts you receive</Text></View>
+      <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+    </Pressable>
+
+    <Text style={styles.section}>Session</Text>
+    <Pressable onPress={signOut} style={[styles.row, styles.signout]}>
+      <Ionicons name="log-out-outline" size={21} color={colors.red} />
+      <Text style={styles.signoutText}>Sign out of VetWise</Text>
+    </Pressable>
+  </ScrollView>;
+}
+
 const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.canvas }, content: { padding: spacing.lg, paddingTop: 58 }, kicker: { color: colors.greenDeep, fontSize: 10, fontWeight: '800', letterSpacing: 1.3 }, profile: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md, marginTop: 18, ...shadow }, avatar: { width: 52, height: 52, borderRadius: 18, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' }, avatarText: { color: colors.surface, fontSize: 21, fontWeight: '800' }, name: { color: colors.ink, fontSize: 16, fontWeight: '800' }, email: { color: colors.muted, fontSize: 12, marginTop: 4 }, section: { color: colors.ink, fontSize: 16, fontWeight: '800', marginTop: 28, marginBottom: 10 }, row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md, marginBottom: 9, ...shadow }, rowTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' }, rowText: { color: colors.muted, fontSize: 12, marginTop: 4 }, signout: { backgroundColor: colors.redSoft }, signoutText: { color: colors.red, fontSize: 14, fontWeight: '800' } });
