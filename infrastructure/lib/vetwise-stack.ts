@@ -318,6 +318,19 @@ export class VetWiseStack extends cdk.Stack {
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
     });
 
+    // Device tokens for FCM push notifications (multiple devices per user)
+    this.tables.devices = new dynamodb.Table(this, 'VetWiseDevices', {
+      tableName: `${prefix}-Devices`,
+      partitionKey: { name: 'deviceId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: props.stage === 'staging' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+    });
+    this.tables.devices.addGlobalSecondaryIndex({
+      indexName: 'userIdIndex',
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+    });
+
     // ============================================================
     // 3. S3 PRIVATE MEDIA BUCKET — Pet photos, videos, prescription PDFs
     // ============================================================
@@ -454,6 +467,7 @@ export class VetWiseStack extends cdk.Stack {
     const serviceabilityFn = createLambda('ServiceabilityFunction', 'src/handlers/serviceability.handler', tableEnv, [this.tables.serviceAreas]);
     const contactFn = createLambda('ContactFunction', 'src/handlers/contact.handler', tableEnv, [this.tables.contactEnquiries]);
     const settingsFn = createLambda('SettingsFunction', 'src/handlers/settings.handler', tableEnv, [this.tables.plans, this.tables.serviceAreas]);
+    const devicesFn = createLambda('DevicesFunction', 'src/handlers/devices.handler', tableEnv, [this.tables.devices]);
 
     // Grant Secrets Manager access to functions that need it
     razorpaySecret.grantRead(paymentsFn);
@@ -634,6 +648,16 @@ export class VetWiseStack extends cdk.Stack {
     // Notifications
     addResource(this.api.root, 'notifications', [{ method: 'GET', lambda: notificationsFn, auth: true }]);
 
+    // Devices (FCM push notification token registration)
+    addResource(this.api.root, 'devices', [
+      { method: 'POST', lambda: devicesFn, auth: true },
+      { method: 'GET', lambda: devicesFn, auth: true },
+    ]);
+    const devicesIdResource = this.api.root.addResource('devices').addResource('{tokenId}');
+    devicesIdResource.addMethod('DELETE', new apigateway.LambdaIntegration(devicesFn), {
+      authorizer: cognitoAuthorizer, authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
     // AI Health Checker
     addResource(this.api.root, 'ai', []);
     const aiResource = this.api.root.addResource('ai');
@@ -656,7 +680,7 @@ export class VetWiseStack extends cdk.Stack {
     const allFunctions = [
       authFn, clientsFn, patientsFn, appointmentsFn, clinicalRecordsFn,
       prescriptionsFn, paymentsFn, subscriptionsFn, doctorsFn,
-      notificationsFn, aiFn, serviceabilityFn, contactFn, settingsFn,
+      notificationsFn, aiFn, serviceabilityFn, contactFn, settingsFn, devicesFn,
     ];
 
     allFunctions.forEach((fn) => {

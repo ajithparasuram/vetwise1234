@@ -3,6 +3,7 @@ import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } 
 import { Ionicons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
 import { api, ApiError, type Plan, type SettingsResponse, type Subscription, type CreateOrderResponse } from '@/api';
+import { openRazorpayCheckout } from '@/razorpay';
 import { Card, EmptyState, ErrorState, LoadingBlock } from '@/ui';
 import { colors, radius, shadow, spacing } from '@/theme';
 
@@ -36,7 +37,36 @@ export default function Plans() {
     try {
       const order: CreateOrderResponse = await api.createOrder('plan', plan.planId);
       setCheckoutState('waiting-payment');
-      Alert.alert('Razorpay Checkout', `Order created for ${formatMoney(order.amount / 100, order.currency)}. The native Razorpay checkout SDK will open here.\n\nKey ID: ${order.keyId}\nOrder ID: ${order.orderId}\n\nTo complete payment, add the Razorpay React Native SDK dependency and configure your Razorpay test keys in AWS Secrets Manager. The backend signature verification is already implemented.`, [{ text: 'OK', onPress: () => setCheckoutState('idle') }]);
+      try {
+        const result = await openRazorpayCheckout({
+          keyId: order.keyId,
+          orderId: order.orderId,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'VetWise',
+          description: plan.name,
+          prefill: { name: '', email: '', contact: '' },
+          theme: { color: '#0D9B6A' },
+        });
+        setCheckoutState('verifying');
+        try {
+          await api.verifyPayment({
+            razorpayOrderId: result.razorpayOrderId,
+            razorpayPaymentId: result.razorpayPaymentId,
+            razorpaySignature: result.razorpaySignature,
+            paymentId: order.paymentId,
+            method: result.method,
+          });
+          setCheckoutState('success');
+          fetch();
+        } catch (err) {
+          setCheckoutError(err instanceof ApiError ? err.message : 'Signature verification failed');
+          setCheckoutState('failed');
+        }
+      } catch (err) {
+        setCheckoutError(err instanceof Error ? err.message : 'Payment could not be completed');
+        setCheckoutState('failed');
+      }
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Could not start checkout';
       setCheckoutError(message); setCheckoutState('failed');
@@ -69,9 +99,10 @@ export default function Plans() {
       </> : <EmptyState icon="pricetag-outline" title="No plans available" text="Your practice has not configured any subscription plans yet. Check back later." />}
     </ScrollView>
 
-    {checkoutState === 'creating-order' ? <View style={styles.overlay}><View style={styles.overlayCard}><LoadingBlock label="Creating secure payment order..." /></View></View> : null}
+    {checkoutState === 'creating-order' || checkoutState === 'waiting-payment' || checkoutState === 'verifying' ? <View style={styles.overlay}><View style={styles.overlayCard}><LoadingBlock label={checkoutState === 'creating-order' ? 'Creating secure payment order...' : checkoutState === 'verifying' ? 'Verifying payment signature...' : 'Opening Razorpay checkout...'} /></View></View> : null}
+    {checkoutState === 'success' ? <View style={styles.overlay}><View style={styles.overlayCard}><Ionicons name="checkmark-circle" size={40} color={colors.greenDeep} /><Text style={styles.overlaySuccessTitle}>Payment Successful</Text><Text style={styles.overlaySuccessText}>Your subscription has been activated after server-side verification.</Text><Pressable onPress={() => setCheckoutState('idle')} style={styles.overlayClose}><Text style={styles.overlayCloseText}>Done</Text></Pressable></View></View> : null}
     {checkoutState === 'failed' ? <View style={styles.overlay}><View style={styles.overlayCard}><Ionicons name="alert-circle" size={36} color={colors.red} /><Text style={styles.overlayError}>{checkoutError}</Text><Pressable onPress={() => setCheckoutState('idle')} style={styles.overlayClose}><Text style={styles.overlayCloseText}>Close</Text></Pressable></View></View> : null}
   </View>;
 }
 
-const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.canvas }, content: { padding: spacing.lg, paddingTop: 8, paddingBottom: 36 }, subtitle: { color: colors.muted, fontSize: 13, lineHeight: 19, marginBottom: 22 }, planCard: { marginBottom: 14, position: 'relative', overflow: 'hidden' }, planCardActive: { borderWidth: 2, borderColor: colors.green }, activeBadge: { position: 'absolute', top: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.green, paddingHorizontal: 10, paddingVertical: 6, borderBottomLeftRadius: 12 }, activeBadgeText: { color: colors.surface, fontSize: 10, fontWeight: '800' }, planName: { color: colors.ink, fontSize: 20, fontWeight: '800', letterSpacing: -0.3 }, priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 8 }, priceAmount: { color: colors.ink, fontSize: 32, fontWeight: '800' }, priceInterval: { color: colors.muted, fontSize: 15, fontWeight: '600' }, duration: { color: colors.muted, fontSize: 12, marginTop: 4 }, benefits: { marginTop: 16 }, benefitRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 8 }, benefitText: { color: colors.ink, fontSize: 13, flex: 1 }, taxText: { color: colors.muted, fontSize: 11, marginTop: 10 }, cancelBtn: { paddingVertical: 12, alignItems: 'center', marginTop: 14, borderTopWidth: 1, borderTopColor: colors.line }, cancelBtnText: { color: colors.red, fontSize: 14, fontWeight: '800' }, subscribeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.green, height: 50, borderRadius: radius.sm, marginTop: 14 }, subscribeBtnText: { color: colors.surface, fontSize: 14, fontWeight: '800' }, securityNote: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', backgroundColor: colors.greenSoft, borderRadius: radius.md, padding: spacing.md, marginTop: 12 }, securityTitle: { color: colors.greenDeep, fontSize: 14, fontWeight: '800' }, securityText: { color: colors.greenDeep, fontSize: 12, lineHeight: 17, marginTop: 4 }, overlay: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(16,42,42,0.5)', alignItems: 'center', justifyContent: 'center' }, overlayCard: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 28, width: '80%', alignItems: 'center' }, overlayError: { color: colors.red, fontSize: 14, fontWeight: '700', textAlign: 'center', marginTop: 12 }, overlayClose: { marginTop: 16, backgroundColor: colors.canvas, paddingHorizontal: 20, paddingVertical: 10, borderRadius: radius.sm }, overlayCloseText: { color: colors.ink, fontSize: 14, fontWeight: '800' } });
+const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.canvas }, content: { padding: spacing.lg, paddingTop: 8, paddingBottom: 36 }, subtitle: { color: colors.muted, fontSize: 13, lineHeight: 19, marginBottom: 22 }, planCard: { marginBottom: 14, position: 'relative', overflow: 'hidden' }, planCardActive: { borderWidth: 2, borderColor: colors.green }, activeBadge: { position: 'absolute', top: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.green, paddingHorizontal: 10, paddingVertical: 6, borderBottomLeftRadius: 12 }, activeBadgeText: { color: colors.surface, fontSize: 10, fontWeight: '800' }, planName: { color: colors.ink, fontSize: 20, fontWeight: '800', letterSpacing: -0.3 }, priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 8 }, priceAmount: { color: colors.ink, fontSize: 32, fontWeight: '800' }, priceInterval: { color: colors.muted, fontSize: 15, fontWeight: '600' }, duration: { color: colors.muted, fontSize: 12, marginTop: 4 }, benefits: { marginTop: 16 }, benefitRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 8 }, benefitText: { color: colors.ink, fontSize: 13, flex: 1 }, taxText: { color: colors.muted, fontSize: 11, marginTop: 10 }, cancelBtn: { paddingVertical: 12, alignItems: 'center', marginTop: 14, borderTopWidth: 1, borderTopColor: colors.line }, cancelBtnText: { color: colors.red, fontSize: 14, fontWeight: '800' }, subscribeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.green, height: 50, borderRadius: radius.sm, marginTop: 14 }, subscribeBtnText: { color: colors.surface, fontSize: 14, fontWeight: '800' }, securityNote: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', backgroundColor: colors.greenSoft, borderRadius: radius.md, padding: spacing.md, marginTop: 12 }, securityTitle: { color: colors.greenDeep, fontSize: 14, fontWeight: '800' }, securityText: { color: colors.greenDeep, fontSize: 12, lineHeight: 17, marginTop: 4 }, overlay: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(16,42,42,0.5)', alignItems: 'center', justifyContent: 'center' }, overlayCard: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 28, width: '80%', alignItems: 'center' }, overlayError: { color: colors.red, fontSize: 14, fontWeight: '700', textAlign: 'center', marginTop: 12 }, overlaySuccessTitle: { color: colors.greenDeep, fontSize: 18, fontWeight: '800', marginTop: 14 }, overlaySuccessText: { color: colors.muted, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 8 }, overlayClose: { marginTop: 16, backgroundColor: colors.canvas, paddingHorizontal: 20, paddingVertical: 10, borderRadius: radius.sm }, overlayCloseText: { color: colors.ink, fontSize: 14, fontWeight: '800' } });

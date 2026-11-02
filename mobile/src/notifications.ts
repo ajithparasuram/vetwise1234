@@ -22,11 +22,9 @@ export async function registerForPushNotifications(): Promise<string | null> {
   const session = await getSession();
   if (session?.accessToken) {
     try {
-      await api.getSettings();
+      await api.registerDevice(token, Platform.OS, '1.0.0');
     } catch {
-      // Device token registration endpoint is not yet available on the backend.
-      // The FCM token is obtained successfully and will be sent to the backend
-      // once a /devices/register endpoint is added (see note below).
+      // Token registration failed — will retry on next app launch
     }
   }
 

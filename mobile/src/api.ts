@@ -169,6 +169,7 @@ export type Payment = {
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignatureVerified?: boolean;
+  refund?: { amount: number; status: string; initiatedAt: string; reason?: string };
   createdAt: string;
   updatedAt: string;
 };
@@ -182,6 +183,16 @@ export type CreateOrderResponse = {
 };
 
 export type VerifyPaymentResponse = { verified: boolean; paymentId: string };
+
+export type Device = {
+  deviceId: string;
+  userId: string;
+  fcmToken: string;
+  platform: string;
+  appVersion?: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export const api = {
   // Auth (unauthed)
@@ -228,6 +239,11 @@ export const api = {
   getPayment: (id: string) => authedRequest<Payment>(`/payments/${id}`),
   createOrder: (resourceType: 'plan' | 'appointment', resourceId: string) => authedRequest<CreateOrderResponse>('/payments/orders', { method: 'POST', body: JSON.stringify({ resourceType, resourceId }) }),
   verifyPayment: (body: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string; paymentId: string; method?: string }) => authedRequest<VerifyPaymentResponse>('/payments/verify', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Devices (FCM push notification token registration)
+  registerDevice: (fcmToken: string, platform: string, appVersion?: string) => authedRequest<Device>('/devices', { method: 'POST', body: JSON.stringify({ fcmToken, platform, appVersion }) }),
+  getDevices: () => authedRequest<Device[]>('/devices'),
+  removeDevice: (tokenId: string) => authedRequest<{ removed: boolean }>(`/devices/${tokenId}`, { method: 'DELETE' }),
 };
 
 export function decodeUser(idToken: string): AuthUser | null {
