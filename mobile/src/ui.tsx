@@ -2,8 +2,8 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View, type ViewStyle } 
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, shadow, spacing } from '@/theme';
 
-export function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
-  return <View style={[styles.card, shadow, style]}>{children}</View>;
+export function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle | ViewStyle[] }) {
+  return <View style={[styles.card, shadow, style] as ViewStyle[]}>{children}</View>;
 }
 
 export function SectionTitle({ children, action }: { children: string; action?: string }) {

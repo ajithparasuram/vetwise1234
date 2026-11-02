@@ -54,7 +54,7 @@ export default function Plans() {
         <Text style={styles.subtitle}>Choose the plan that fits your pet care needs. Prices are set by your VetWise practice.</Text>
         {settings.plans.map((plan) => {
           const isActive = plan.planId === activePlanId;
-          return <Card key={plan.planId} style={[styles.planCard, isActive ? styles.planCardActive : undefined]}>
+          return <Card key={plan.planId} style={[styles.planCard, isActive ? styles.planCardActive : {}]}>
             {isActive ? <View style={styles.activeBadge}><Ionicons name="checkmark-circle" size={13} color={colors.surface} /><Text style={styles.activeBadgeText}>Current plan</Text></View> : null}
             <Text style={styles.planName}>{plan.name}</Text>
             <View style={styles.priceRow}><Text style={styles.priceAmount}>{formatMoney(plan.price, plan.currency)}</Text><Text style={styles.priceInterval}> / {plan.billingInterval}</Text></View>
