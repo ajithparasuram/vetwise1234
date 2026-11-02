@@ -2632,6 +2632,7 @@ function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [method, setMethod] = useState<'whatsapp' | 'password'>('whatsapp');
   const allowedRoles = VARIANT_ROLES[variant];
+  const signupRoles = allowedRoles.filter((r) => r === 'client' || r === 'doctor');
   const [role, setRole] = useState<Role>(VARIANT_DEFAULT_ROLE[variant]);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -2733,7 +2734,7 @@ function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) 
     if (!signupPhone.trim()) { setError('Phone number is required.'); return; }
     if (signupPhone.replace(/\D/g, '').length < 10) { setError('Please enter a valid 10-digit mobile number.'); return; }
     if (!signupEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupEmail)) { setError('Please enter a valid email address.'); return; }
-    if (!allowedRoles.includes(role)) { setError('This role is not available for this app.'); return; }
+    if (!signupRoles.includes(role)) { setError('Admin and Front Desk accounts cannot be self-registered. Please contact an administrator.'); return; }
     const phone = formatPhoneForWa(signupPhone);
     setError(''); setInfo(''); setLoading(true);
     try {
@@ -2842,8 +2843,8 @@ function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) 
           <p className="signup">New to {VARIANT_THEME[variant].label}? <button className="link" onClick={() => { setMode('signup'); resetState(); setError(''); setInfo(''); }}>Create an account</button></p>
         </> : <>
           <h2>Create your account</h2><p>{variant === 'client' ? 'Join to manage your pet\'s health, appointments, and more.' : 'Join VetWise to manage pet care in one place.'}</p>
-          {allowedRoles.length > 1 && <div className="role-switch">{allowedRoles.map((r) => <button key={r} className={role === r ? 'active' : ''} onClick={() => { setRole(r); resetState(); }}>{r[0].toUpperCase() + r.slice(1)}</button>)}</div>}
-          <div className="login-info" style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '4px' }}><Send size={14} style={{ flex: 'none', marginTop: '1px' }} /><span>WhatsApp OTP verification is required to create an account. Your mobile number will be verified before registration is complete.</span></div>
+          {signupRoles.length > 1 && <div className="role-switch">{signupRoles.map((r) => <button key={r} className={role === r ? 'active' : ''} onClick={() => { setRole(r); resetState(); }}>{r[0].toUpperCase() + r.slice(1)}</button>)}</div>}
+          <div className="login-info" style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '4px' }}><Send size={14} style={{ flex: 'none', marginTop: '1px' }} /><span>WhatsApp OTP verification is required to create an account. Your mobile number will be verified before registration is complete. Admin and Front Desk accounts must be created by an administrator.</span></div>
           {error && <p className="login-error">{error}</p>}
           {info && <p className="login-info">{info}</p>}
           {!otpSent ? <>

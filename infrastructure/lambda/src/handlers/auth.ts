@@ -525,8 +525,8 @@ async function handleVerifyWhatsappOtp(event: AuthEvent) {
       return badRequest('Registration data (name, email, role) is required for registration.');
     }
     if (!validateEmail(reg.email)) return badRequest('A valid email is required.');
-    if (!['client', 'doctor', 'admin', 'frontdesk'].includes(reg.role)) {
-      return badRequest('Invalid role.');
+    if (!['client', 'doctor'].includes(reg.role)) {
+      return badRequest('Only client and doctor self-registration is allowed. Admin and Front Desk accounts must be created by an administrator.');
     }
 
     const name = sanitizeString(reg.name);
