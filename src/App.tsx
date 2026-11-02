@@ -2843,35 +2843,24 @@ function Login({ onSignIn, variant }: { onSignIn: (role: Role, user?: AuthUser) 
         </> : <>
           <h2>Create your account</h2><p>{variant === 'client' ? 'Join to manage your pet\'s health, appointments, and more.' : 'Join VetWise to manage pet care in one place.'}</p>
           {allowedRoles.length > 1 && <div className="role-switch">{allowedRoles.map((r) => <button key={r} className={role === r ? 'active' : ''} onClick={() => { setRole(r); resetState(); }}>{r[0].toUpperCase() + r.slice(1)}</button>)}</div>}
-          <div className="method-toggle">
-            <button className={method === 'whatsapp' ? 'active' : ''} onClick={() => { setMethod('whatsapp'); resetState(); }}><Send size={13} /> WhatsApp OTP</button>
-            <button className={method === 'password' ? 'active' : ''} onClick={() => { setMethod('password'); resetState(); }}>Password</button>
-          </div>
+          <div className="login-info" style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '4px' }}><Send size={14} style={{ flex: 'none', marginTop: '1px' }} /><span>WhatsApp OTP verification is required to create an account. Your mobile number will be verified before registration is complete.</span></div>
           {error && <p className="login-error">{error}</p>}
           {info && <p className="login-info">{info}</p>}
-          {method === 'whatsapp' ? <>
-            {!otpSent ? <>
-              <label>Full Name<input value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Enter your name" /></label>
-              <label>Mobile Number <span className="req">*</span><input value={signupPhone} onChange={(e) => setSignupPhone(e.target.value)} placeholder="9876543210" inputMode="tel" /></label>
-              <label>Email <span className="req">*</span><input value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="you@example.com" /></label>
-              <p className="otp-hint" style={{ marginBottom: '12px' }}>Step 1: Enter your details. Step 2: Verify your WhatsApp number. Step 3: Complete registration.</p>
-              <button className="primary full" onClick={sendWhatsappOtpRegister} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Send WhatsApp OTP'}</button>
-            </> : <>
-              <div className="signup-otp-summary">
-                <div><strong>{signupName}</strong></div>
-                <div><small>{signupEmail}</small></div>
-                <div><small>{formatPhoneForWa(signupPhone)}</small></div>
-              </div>
-              <label>Enter OTP<div className="otp-row" onPaste={handleOtpPaste}>{otp.map((d, i) => <input key={i} id={`wa-otp-${i}`} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleOtpKey(i, e)} maxLength={1} inputMode="numeric" />)}</div></label>
-              <p className="otp-hint">A 6-digit code was sent to {formatPhoneForWa(signupPhone)} via WhatsApp. {resendTimer > 0 ? `Resend in ${resendTimer}s` : <button className="link" onClick={() => { resetState(); }}>Change number</button>}</p>
-              <button className="primary full" onClick={verifyWhatsappOtpRegister} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Verify & Create Account'}</button>
-            </>}
-          </> : <>
+          {!otpSent ? <>
             <label>Full Name<input value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Enter your name" /></label>
-            <label>Phone Number <span className="req">*</span><input value={signupPhone} onChange={(e) => setSignupPhone(e.target.value)} placeholder="9876543210" /></label>
+            <label>Mobile Number <span className="req">*</span><input value={signupPhone} onChange={(e) => setSignupPhone(e.target.value)} placeholder="9876543210" inputMode="tel" /></label>
             <label>Email <span className="req">*</span><input value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="you@example.com" /></label>
-            <label>Password<div className="password"><input type={showSignupPw ? 'text' : 'password'} value={signupPw} onChange={(e) => setSignupPw(e.target.value)} placeholder="At least 8 characters" /><button onClick={() => setShowSignupPw(!showSignupPw)}>{showSignupPw ? 'Hide' : 'Show'}</button></div></label>
-            <button className="primary full" onClick={passwordSignUp} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Create Account'}</button>
+            <p className="otp-hint" style={{ marginBottom: '12px' }}>Step 1: Enter your details. Step 2: Verify your WhatsApp number. Step 3: Complete registration.</p>
+            <button className="primary full" onClick={sendWhatsappOtpRegister} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Send WhatsApp OTP'}</button>
+          </> : <>
+            <div className="signup-otp-summary">
+              <div><strong>{signupName}</strong></div>
+              <div><small>{signupEmail}</small></div>
+              <div><small>{formatPhoneForWa(signupPhone)}</small></div>
+            </div>
+            <label>Enter OTP<div className="otp-row" onPaste={handleOtpPaste}>{otp.map((d, i) => <input key={i} id={`wa-otp-${i}`} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleOtpKey(i, e)} maxLength={1} inputMode="numeric" />)}</div></label>
+            <p className="otp-hint">A 6-digit code was sent to {formatPhoneForWa(signupPhone)} via WhatsApp. {resendTimer > 0 ? `Resend in ${resendTimer}s` : <button className="link" onClick={() => { resetState(); }}>Change number</button>}</p>
+            <button className="primary full" onClick={verifyWhatsappOtpRegister} disabled={loading}>{loading ? <LoadingLogo variant={variant} /> : 'Verify & Create Account'}</button>
           </>}
           <p className="signup">Already have an account? <button className="link" onClick={() => { setMode('signin'); resetState(); setError(''); setInfo(''); }}>Sign in</button></p>
         </>}
