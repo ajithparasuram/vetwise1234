@@ -297,6 +297,19 @@ export class VetWiseStack extends cdk.Stack {
       removalPolicy: props.stage === 'staging' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
     });
 
+    this.tables.otpStore = new dynamodb.Table(this, 'VetWiseOtpStore', {
+      tableName: `${prefix}-OtpStore`,
+      partitionKey: { name: 'otpId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: props.stage === 'staging' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+      timeToLiveAttribute: 'ttl',
+    });
+    this.tables.otpStore.addGlobalSecondaryIndex({
+      indexName: 'phoneIndex',
+      partitionKey: { name: 'phone', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+    });
+
     // ============================================================
     // 3. S3 PRIVATE MEDIA BUCKET — Pet photos, videos, prescription PDFs
     // ============================================================
@@ -418,7 +431,7 @@ export class VetWiseStack extends cdk.Stack {
 
     const authFn = createLambda('AuthFunction', 'src/handlers/auth.handler', {
       ...tableEnv,
-    }, [this.tables.owners, this.tables.doctors, this.tables.organizations]);
+    }, [this.tables.owners, this.tables.doctors, this.tables.organizations, this.tables.otpStore]);
 
     const clientsFn = createLambda('ClientsFunction', 'src/handlers/clients.handler', tableEnv, [this.tables.owners, this.tables.organizations]);
     const patientsFn = createLambda('PatientsFunction', 'src/handlers/patients.handler', tableEnv, [this.tables.pets, this.tables.owners]);
@@ -438,6 +451,7 @@ export class VetWiseStack extends cdk.Stack {
     razorpaySecret.grantRead(paymentsFn);
     razorpaySecret.grantRead(subscriptionsFn);
     whatsappSecret.grantRead(notificationsFn);
+    whatsappSecret.grantRead(authFn);
     aiSecret.grantRead(aiFn);
 
     // Grant Cognito admin access to auth and doctors functions
@@ -500,6 +514,8 @@ export class VetWiseStack extends cdk.Stack {
     addResource(authResource, 'otp', [{ method: 'PUT', lambda: authFn, auth: false }]);
     addResource(authResource, 'forgot-password', [{ method: 'POST', lambda: authFn, auth: false }]);
     addResource(authResource, 'refresh', [{ method: 'POST', lambda: authFn, auth: false }]);
+    addResource(authResource, 'whatsapp-otp', [{ method: 'POST', lambda: authFn, auth: false }]);
+    addResource(authResource, 'whatsapp-otp', [{ method: 'PUT', lambda: authFn, auth: false }]);
 
     // Protected resource endpoints (Cognito auth required)
     addResource(this.api.root, 'clients', [
