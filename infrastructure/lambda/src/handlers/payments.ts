@@ -209,7 +209,7 @@ async function handleRefund(event: APIGatewayProxyEvent, ctx: { role: string; su
   if (ctx.role === 'client' && payment.ownerId !== ctx.sub) return forbidden('Payment does not belong to you');
   if (!['client', 'admin', 'frontdesk'].includes(ctx.role)) return forbidden();
   if (payment.status !== 'paid') return badRequest('Only completed payments can be refunded');
-  if (payment.refund || payment.status === 'refunded') return badRequest('This payment has already been refunded');
+  if (payment.refund) return badRequest('This payment has already been refunded');
   if (!payment.razorpayPaymentId) return badRequest('This payment cannot be refunded online');
 
   const body = parseBody(event);
