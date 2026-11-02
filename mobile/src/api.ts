@@ -239,6 +239,7 @@ export const api = {
   getPayment: (id: string) => authedRequest<Payment>(`/payments/${id}`),
   createOrder: (resourceType: 'plan' | 'appointment', resourceId: string) => authedRequest<CreateOrderResponse>('/payments/orders', { method: 'POST', body: JSON.stringify({ resourceType, resourceId }) }),
   verifyPayment: (body: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string; paymentId: string; method?: string }) => authedRequest<VerifyPaymentResponse>('/payments/verify', { method: 'POST', body: JSON.stringify(body) }),
+  requestRefund: (id: string, reason?: string) => authedRequest<Payment>(`/payments/${id}/refund`, { method: 'POST', body: JSON.stringify({ reason }) }),
 
   // Devices (FCM push notification token registration)
   registerDevice: (fcmToken: string, platform: string, appVersion?: string) => authedRequest<Device>('/devices', { method: 'POST', body: JSON.stringify({ fcmToken, platform, appVersion }) }),

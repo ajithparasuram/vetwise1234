@@ -614,6 +614,9 @@ export class VetWiseStack extends cdk.Stack {
     paymentsIdResource.addMethod('GET', new apigateway.LambdaIntegration(paymentsFn), {
       authorizer: cognitoAuthorizer, authorizationType: apigateway.AuthorizationType.COGNITO,
     });
+    paymentsIdResource.addResource('refund').addMethod('POST', new apigateway.LambdaIntegration(paymentsFn), {
+      authorizer: cognitoAuthorizer, authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
 
     // Subscriptions
     addResource(this.api.root, 'subscriptions', [

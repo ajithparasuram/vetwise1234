@@ -11,5 +11,8 @@
     "@aws-sdk/client-secrets-manager": "^3.658.0",
     "@aws-sdk/lib-dynamodb": "^3.658.0",
     "@aws-sdk/s3-request-presigner": "^3.658.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.164"
   }
 }

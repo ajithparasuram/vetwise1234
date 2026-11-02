@@ -1,19 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, router, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack } from 'expo-router';
 import { api, ApiError, type Payment } from '@/api';
 import { Card, EmptyState, ErrorState, StatusBadge } from '@/ui';
 import { colors, radius, shadow, spacing } from '@/theme';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 function formatMoney(amount: number, currency: string) { return `${currency === 'INR' ? '₹' : currency}${amount.toLocaleString('en-IN')}`; }
 function formatDate(iso: string) { return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function escapeHtml(value: string) { return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character] ?? character)); }
 
 export default function PaymentDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [payment, setPayment] = useState<Payment | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
+  const [refundLoading, setRefundLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -28,6 +33,30 @@ export default function PaymentDetail() {
   const isFailed = payment.status === 'failed';
   const isPending = payment.status === 'created' || payment.status === 'pending';
   const isRefunded = payment.status === 'refunded' || payment.refund != null;
+
+  const downloadReceipt = async () => {
+    setReceiptLoading(true);
+    try {
+      const html = `<html><body style="font-family: sans-serif; padding: 32px; color: #163232"><h1>VetWise payment receipt</h1><hr/><p><strong>Service</strong><br/>${escapeHtml(payment.service)}</p><p><strong>Transaction ID</strong><br/>${escapeHtml(payment.paymentId)}</p><p><strong>Date</strong><br/>${escapeHtml(formatDate(payment.createdAt))}</p><p><strong>Status</strong><br/>${escapeHtml(payment.status)}</p><h2>${escapeHtml(formatMoney(payment.amount, payment.currency))}</h2></body></html>`;
+      const file = await Print.printToFileAsync({ html });
+      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', dialogTitle: 'Save VetWise receipt' });
+      else Alert.alert('Receipt ready', 'Your receipt was generated, but sharing is not available on this device.');
+    } catch {
+      Alert.alert('Could not download receipt', 'Please try again.');
+    } finally { setReceiptLoading(false); }
+  };
+
+  const requestRefund = () => {
+    Alert.alert('Request a refund', 'This will request a full refund for this payment. Refunds usually take 5-7 business days to reach your account.', [
+      { text: 'Keep payment', style: 'cancel' },
+      { text: 'Request refund', style: 'destructive', onPress: async () => {
+        setRefundLoading(true);
+        try { setPayment(await api.requestRefund(payment.paymentId, 'Requested by account holder')); }
+        catch (err) { Alert.alert('Refund unavailable', err instanceof ApiError ? err.message : 'Could not start the refund.'); }
+        finally { setRefundLoading(false); }
+      } },
+    ]);
+  };
 
   return <View style={styles.root}>
     <Stack.Screen options={{ headerShown: true, headerBackTitle: 'Back', title: 'Payment Receipt', headerStyle: { backgroundColor: colors.canvas }, headerTintColor: colors.ink, headerShadowVisible: false }} />
@@ -63,7 +92,10 @@ export default function PaymentDetail() {
 
       {payment.razorpaySignatureVerified ? <View style={styles.verifiedNote}><Ionicons name="shield-checkmark" size={18} color={colors.greenDeep} /><Text style={styles.verifiedText}>Signature verified by VetWise backend</Text></View> : null}
 
-      {isPaid ? <Pressable style={styles.receiptBtn}><Ionicons name="download-outline" size={18} color={colors.greenDeep} /><Text style={styles.receiptBtnText}>Download receipt</Text></Pressable> : null}
+      {isPaid ? <>
+        <Pressable disabled={receiptLoading} onPress={downloadReceipt} style={[styles.receiptBtn, receiptLoading && styles.disabledBtn]}><Ionicons name="download-outline" size={18} color={colors.greenDeep} /><Text style={styles.receiptBtnText}>{receiptLoading ? 'Preparing receipt...' : 'Download receipt'}</Text></Pressable>
+        {!payment.refund ? <Pressable disabled={refundLoading} onPress={requestRefund} style={[styles.refundBtn, refundLoading && styles.disabledBtn]}><Ionicons name="return-down-back-outline" size={18} color={colors.red} /><Text style={styles.refundBtnText}>{refundLoading ? 'Starting refund...' : 'Request a refund'}</Text></Pressable> : null}
+      </> : null}
 
       {isPending ? <View style={styles.pendingNote}><Ionicons name="information-circle-outline" size={18} color={colors.amber} /><Text style={styles.pendingText}>This payment is still being processed. You will be notified once it completes. If you completed payment, the backend webhook will verify and update this automatically.</Text></View> : null}
 
@@ -72,4 +104,4 @@ export default function PaymentDetail() {
   </View>;
 }
 
-const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.canvas }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, content: { padding: spacing.lg, paddingTop: 8, paddingBottom: 36 }, loadingText: { color: colors.muted }, statusHero: { alignItems: 'center', paddingVertical: 36, borderRadius: radius.lg, ...shadow }, heroPaid: { backgroundColor: colors.green }, heroFailed: { backgroundColor: colors.red }, heroPending: { backgroundColor: colors.amber }, heroRefunded: { backgroundColor: colors.blue }, statusIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }, statusHeroTitle: { color: colors.surface, fontSize: 18, fontWeight: '800', marginTop: 14 }, statusHeroAmount: { color: colors.surface, fontSize: 34, fontWeight: '800', marginTop: 6 }, statusHeroDate: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 4 }, detailCard: { marginTop: 20 }, detailRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.line }, detailLabel: { color: colors.muted, fontSize: 13, fontWeight: '600' }, detailValue: { color: colors.ink, fontSize: 13, fontWeight: '700', maxWidth: '55%', textAlign: 'right' }, refundHeader: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 24, marginBottom: 12 }, refundHeaderTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' }, refundCard: { marginBottom: 10 }, refundNote: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: colors.blueSoft, padding: 14, borderRadius: radius.sm, marginTop: 14 }, refundNoteText: { flex: 1, color: colors.blue, fontSize: 12, lineHeight: 17 }, verifiedNote: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: colors.greenSoft, padding: 14, borderRadius: radius.sm, marginTop: 14 }, verifiedText: { color: colors.greenDeep, fontSize: 13, fontWeight: '700' }, receiptBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, height: 50, borderRadius: radius.sm, marginTop: 16, ...shadow }, receiptBtnText: { color: colors.greenDeep, fontSize: 14, fontWeight: '800' }, pendingNote: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: colors.amberSoft, padding: 14, borderRadius: radius.sm, marginTop: 14 }, pendingText: { flex: 1, color: colors.amber, fontSize: 12, lineHeight: 17 }, failedNote: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: colors.redSoft, padding: 14, borderRadius: radius.sm, marginTop: 14 }, failedText: { flex: 1, color: colors.red, fontSize: 12, lineHeight: 17 } });
+const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.canvas }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, content: { padding: spacing.lg, paddingTop: 8, paddingBottom: 36 }, loadingText: { color: colors.muted }, statusHero: { alignItems: 'center', paddingVertical: 36, borderRadius: radius.lg, ...shadow }, heroPaid: { backgroundColor: colors.green }, heroFailed: { backgroundColor: colors.red }, heroPending: { backgroundColor: colors.amber }, heroRefunded: { backgroundColor: colors.blue }, statusIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }, statusHeroTitle: { color: colors.surface, fontSize: 18, fontWeight: '800', marginTop: 14 }, statusHeroAmount: { color: colors.surface, fontSize: 34, fontWeight: '800', marginTop: 6 }, statusHeroDate: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 4 }, detailCard: { marginTop: 20 }, detailRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.line }, detailLabel: { color: colors.muted, fontSize: 13, fontWeight: '600' }, detailValue: { color: colors.ink, fontSize: 13, fontWeight: '700', maxWidth: '55%', textAlign: 'right' }, refundHeader: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 24, marginBottom: 12 }, refundHeaderTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' }, refundCard: { marginBottom: 10 }, refundNote: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: colors.blueSoft, padding: 14, borderRadius: radius.sm, marginTop: 14 }, refundNoteText: { flex: 1, color: colors.blue, fontSize: 12, lineHeight: 17 }, verifiedNote: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: colors.greenSoft, padding: 14, borderRadius: radius.sm, marginTop: 14 }, verifiedText: { color: colors.greenDeep, fontSize: 13, fontWeight: '700' }, receiptBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, height: 50, borderRadius: radius.sm, marginTop: 16, ...shadow }, receiptBtnText: { color: colors.greenDeep, fontSize: 14, fontWeight: '800' }, refundBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, height: 50, borderRadius: radius.sm, marginTop: 10, borderWidth: 1, borderColor: colors.red }, refundBtnText: { color: colors.red, fontSize: 14, fontWeight: '800' }, disabledBtn: { opacity: 0.55 }, pendingNote: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: colors.amberSoft, padding: 14, borderRadius: radius.sm, marginTop: 14 }, pendingText: { flex: 1, color: colors.amber, fontSize: 12, lineHeight: 17 }, failedNote: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: colors.redSoft, padding: 14, borderRadius: radius.sm, marginTop: 14 }, failedText: { flex: 1, color: colors.red, fontSize: 12, lineHeight: 17 } });

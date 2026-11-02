@@ -51,6 +51,7 @@ export const handler = async (event: APIGatewayProxyEvent) => {
 
     if (resource === '/payments/orders' && method === 'POST') return await handleCreateOrder(event, ctx.sub);
     if (resource === '/payments/verify' && method === 'POST') return await handleVerify(event, ctx.sub);
+    if (resource === '/payments/{id}/refund' && method === 'POST') return await handleRefund(event, ctx);
     if (resource === '/payments' && method === 'GET') return await handleList(event, ctx);
     if (resource === '/payments/{id}' && method === 'GET') return await handleGet(event, ctx);
 
@@ -199,6 +200,51 @@ async function handleVerify(event: APIGatewayProxyEvent, userId: string) {
 /**
  * GET /payments — list payments filtered by role
  */
+async function handleRefund(event: APIGatewayProxyEvent, ctx: { role: string; sub: string }) {
+  const paymentId = getPathParam(event, 'id');
+  if (!paymentId) return badRequest('Payment ID is required');
+
+  const payment = await getItem<Payment>('payments', { paymentId });
+  if (!payment) return notFound('Payment not found');
+  if (ctx.role === 'client' && payment.ownerId !== ctx.sub) return forbidden('Payment does not belong to you');
+  if (!['client', 'admin', 'frontdesk'].includes(ctx.role)) return forbidden();
+  if (payment.status !== 'paid') return badRequest('Only completed payments can be refunded');
+  if (payment.refund || payment.status === 'refunded') return badRequest('This payment has already been refunded');
+  if (!payment.razorpayPaymentId) return badRequest('This payment cannot be refunded online');
+
+  const body = parseBody(event);
+  const reason = sanitizeString(body.reason) || 'Requested by account holder';
+  const creds = await getRazorpayCredentials();
+  const refundResponse = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(payment.razorpayPaymentId)}/refund`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Basic ' + Buffer.from(`${creds.keyId}:${creds.keySecret}`).toString('base64'),
+    },
+    body: JSON.stringify({ amount: Math.round(payment.amount * 100), notes: { reason } }),
+  });
+
+  if (!refundResponse.ok) {
+    console.error('Razorpay refund failed:', await refundResponse.text());
+    return internalError('Refund could not be started');
+  }
+
+  const refund = await refundResponse.json() as { id: string; amount: number; status: string; created_at?: number };
+  const updatedPayment: Payment = {
+    ...payment,
+    status: refund.status === 'processed' ? 'refunded' : 'refund_pending',
+    refund: {
+      amount: refund.amount / 100,
+      status: refund.status,
+      initiatedAt: refund.created_at ? new Date(refund.created_at * 1000).toISOString() : now(),
+      reason,
+    },
+    updatedAt: now(),
+  };
+  await putItem('payments', updatedPayment);
+  return success(updatedPayment);
+}
+
 async function handleList(event: APIGatewayProxyEvent, ctx: { role: string; sub: string }) {
   if (ctx.role === 'client') {
     const payments = await queryByIndex<Payment>('payments', 'ownerIdIndex', 'ownerId = :oid', { ':oid': ctx.sub });
