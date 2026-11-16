@@ -541,15 +541,16 @@ function ClientDetail({ client }: { client: any }) {
 }
 
 function PatientsPage({ role, myPets, setMyPets, authUserId, setModal, setEditTarget, refreshKey }: { role: Role; myPets: any[]; setMyPets: (p: any) => void; authUserId: string; setModal: (s: string | null) => void; setEditTarget: (t: any) => void; refreshKey: number }) {
-  const [selectedPatientIdx, setSelectedPatientIdx] = useState(0);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [patientQuery, setPatientQuery] = useState('');
   const [speciesPill, setSpeciesPill] = useState('All Species');
   const [allPatients, setAllPatients] = useState<any[]>([]);
   const [allClients, setAllClients] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(role !== 'client');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (role === 'client') return;
     setLoading(true); setError(null);
     Promise.all([fetchPatients(), fetchClients()]).then(([patRes, cliRes]) => {
       if (patRes.error) setError(patRes.error);
@@ -557,56 +558,59 @@ function PatientsPage({ role, myPets, setMyPets, authUserId, setModal, setEditTa
       if (cliRes.data) setAllClients(cliRes.data as any[]);
       setLoading(false);
     });
-  }, [refreshKey]);
+  }, [role, refreshKey]);
 
-  if (role === 'client') {
-    return <div className="patients-layout">
-      <div className="patient-list">
-        <div className="filter-row"><SearchBar value={patientQuery} onChange={setPatientQuery} placeholder="Search by name, species, breed..." /></div>
-        {myPets.map((p: any, i: number) => (
-          <button className="patient-card" key={p.name ?? i}>
-            <div className="pet-icon"><PawPrint size={19} /></div>
-            <div className="card-main"><strong>{p.name} <em className={`tag ${(p.species ?? '').toLowerCase()}`}>{p.species}</em><span className="muted"> {p.sex}</span></strong><span>{p.breed} · {p.color}</span><small>{p.age} · {p.weight}</small></div>
-            <div className="owner"><small>{p.visits ?? 0} {p.visits === 1 ? 'visit' : 'visits'}</small><small>Last: {p.lastVisit ?? 'No visits yet'}</small></div>
-          </button>
-        ))}
-      </div>
-      <div className="empty-detail"><PawPrint size={34} /><p>Select a pet to view details</p></div>
-    </div>;
-  }
+  const sourcePatients = role === 'client' ? myPets : allPatients;
+  const filteredPatients = sourcePatients.filter((p: any) => {
+    const species = p.species ?? 'Unknown';
+    const q = patientQuery.toLowerCase();
+    return (!q || `${p.name ?? ''} ${species} ${p.breed ?? ''} ${p.color ?? ''} ${p.ownerId ?? ''}`.toLowerCase().includes(q)) && (speciesPill === 'All Species' || species === speciesPill);
+  });
+  const selectedPatient = filteredPatients.find((p: any) => (p.petId ?? p.patientId) === selectedPatientId);
 
   if (loading) return <div className="empty-state"><Loader2 size={28} className="spin" /><p>Loading patients...</p></div>;
-  if (error) return <div className="empty-state"><AlertTriangle size={32} /><h3>Could not load patients</h3><p>{error}</p><button className="primary" onClick={() => { setLoading(true); setError(null); fetchPatients().then(({ data, error: e }) => { if (e) setError(e); else if (data) setAllPatients(data as any[]); setLoading(false); }); }}><RotateCw size={16} /> Retry</button></div>;
-
-  const adapted = allPatients.map((p: any) => {
-    if (Array.isArray(p)) return p;
-    const owner = allClients.find((c: any) => c.ownerId === p.ownerId);
-    return [p.name ?? 'Unknown', p.species ?? 'Unknown', `${p.breed ?? ''} · ${p.color ?? ''}`, `${p.age ?? ''} · ${p.weight ?? ''}`, owner?.name ?? 'Unknown', `${p.visits ?? 0} visits`, p.petId ?? ''];
-  });
-
-  const filteredPatients = adapted.filter((p) => {
-    const q = patientQuery.toLowerCase();
-    const matchesQuery = !q || `${p[0]} ${p[1]} ${p[2]} ${p[4]}`.toLowerCase().includes(q);
-    const matchesSpecies = speciesPill === 'All Species' || p[1] === speciesPill;
-    return matchesQuery && matchesSpecies;
-  });
-  const selectedPatient = filteredPatients[selectedPatientIdx] ?? filteredPatients[0];
+  if (error) return <div className="empty-state"><AlertTriangle size={32} /><h3>Could not load patients</h3><p>{error}</p></div>;
 
   return <div className="patients-layout">
     <div className="patient-list">
-      <div className="filter-row"><SearchBar value={patientQuery} onChange={(v) => { setPatientQuery(v); setSelectedPatientIdx(0); }} placeholder="Search by name, species, breed, owner..." />
-        <div className="species-pills">{['All Species', 'Dog', 'Cat', 'Cattle', 'Horse', 'Goat', 'Rabbit', 'Elephant'].map((s) => <button className={speciesPill === s ? 'active' : ''} key={s} onClick={() => { setSpeciesPill(s); setSelectedPatientIdx(0); }}>{s}</button>)}</div>
+      <div className="filter-row"><SearchBar value={patientQuery} onChange={setPatientQuery} placeholder="Search by name, species, breed, owner..." />
+        {role !== 'client' && <div className="species-pills">{['All Species', 'Dog', 'Cat', 'Cattle', 'Horse', 'Goat', 'Rabbit', 'Elephant'].map((s) => <button className={speciesPill === s ? 'active' : ''} key={s} onClick={() => { setSpeciesPill(s); setSelectedPatientId(null); }}>{s}</button>)}</div>}
       </div>
-      {filteredPatients.map((p, i) => (
-        <button className={`patient-card ${selectedPatientIdx === i ? 'selected' : ''}`} key={p[0] + i} onClick={() => setSelectedPatientIdx(i)}>
+      {filteredPatients.map((p: any, i: number) => {
+        const id = p.petId ?? p.patientId ?? `${p.name}-${i}`;
+        return <button className={`patient-card ${selectedPatientId === id ? 'selected' : ''}`} key={id} onClick={() => setSelectedPatientId(id)}>
           <div className="pet-icon"><PawPrint size={19} /></div>
-          <div className="card-main"><strong>{p[0]} <em className={`tag ${p[1].toLowerCase()}`}>{p[1]}</em><span className="muted"> {p[1] === 'Dog' ? 'Male' : 'Female'}</span></strong><span>{p[2]}</span><small>{p[3]}</small><span className="pid-small">{p[6] ?? ''}</span></div>
-          <div className="owner"><strong>{p[4]}</strong><small>{p[5]}</small></div>
-        </button>
-      ))}
+          <div className="card-main"><strong>{p.name ?? 'Unknown'} <em className={`tag ${(p.species ?? '').toLowerCase()}`}>{p.species ?? 'Unknown'}</em><span className="muted"> {p.sex ?? ''}</span></strong><span>{[p.breed, p.color].filter(Boolean).join(' · ') || 'Details not recorded'}</span><small>{[p.age ?? p.estimatedAge, p.weight].filter(Boolean).join(' · ')}</small><span className="pid-small">{id}</span></div>
+          {role !== 'client' && <div className="owner"><strong>{allClients.find((c: any) => c.ownerId === p.ownerId)?.name ?? 'Unknown owner'}</strong><small>{p.visits ?? 0} visits</small></div>}
+        </button>;
+      })}
     </div>
-    {selectedPatient ? <DoctorPatientDetail patient={selectedPatient} allClients={allClients} setModal={setModal} setEditTarget={setEditTarget} /> : <div className="empty-detail"><PawPrint size={34} /><p>Select a patient to view details</p></div>}
+    {selectedPatient ? <PetPassport patient={selectedPatient} client={allClients.find((c: any) => c.ownerId === selectedPatient.ownerId)} onClose={() => setSelectedPatientId(null)} /> : <div className="empty-detail"><PawPrint size={34} /><p>Select a pet to view its passport</p></div>}
   </div>;
+}
+
+function PetPassport({ patient, client, onClose }: { patient: any; client?: any; onClose: () => void }) {
+  const name = patient.name ?? 'Unknown pet';
+  const species = patient.species === 'Other' ? (patient.customSpecies ?? 'Other') : (patient.species ?? 'Unknown');
+  const vaccinationText = String(patient.vaccinationInfo ?? '').trim();
+  const vaccinationItems = vaccinationText && !/^not recorded|none$/i.test(vaccinationText) ? vaccinationText.split(/[,;]+/).map((item) => item.trim()).filter(Boolean) : [];
+  const historyItems = [patient.medicalHistory, patient.existingConditions, patient.medications].flatMap((value) => String(value ?? '').split(/[,;]+/).map((item) => item.trim()).filter((item) => item && !/^none|not recorded$/i.test(item)));
+  const imageUrl = patient.photoUrl ?? patient.photo ?? patient.imageUrl ?? patient.avatarUrl;
+  const currentStatus = vaccinationItems.length > 0 ? 'Up to date' : 'Records incomplete';
+  const age = patient.estimatedAge ?? patient.age ?? 'Not recorded';
+  const weight = patient.weight ?? 'Not recorded';
+  const sex = patient.sex ?? 'Not recorded';
+
+  return <section className="pet-passport">
+    <div className="passport-photo">{imageUrl ? <img src={imageUrl} alt={`${name} profile`} /> : <PawPrint size={54} />}</div>
+    <div className="passport-body">
+      <div className="passport-header"><div><h2>{name}</h2><p>{species}{patient.breed ? ` · ${patient.breed}` : ''}</p></div><button className="passport-close" onClick={onClose} aria-label="Close pet passport"><X size={17} /></button><span className={`passport-status ${vaccinationItems.length > 0 ? 'current' : 'needs-review'}`}>{vaccinationItems.length > 0 ? '✓' : '!'} {currentStatus}</span></div>
+      <div className="passport-facts"><div><label>AGE</label><strong>{age}</strong></div><div><label>WEIGHT</label><strong>{weight}</strong></div><div><label>SEX</label><strong>{sex}</strong></div></div>
+      <div className="passport-section"><h3><Syringe size={15} /> Vaccination status</h3><div className="passport-chips">{vaccinationItems.length > 0 ? vaccinationItems.map((item, index) => <span className={/due|overdue/i.test(item) ? 'passport-chip due' : 'passport-chip'} key={`${item}-${index}`}>{item}</span>) : <span className="passport-empty">No vaccination details recorded</span>}</div></div>
+      <div className="passport-section"><h3><Heart size={15} /> Medical history</h3>{historyItems.length > 0 ? <ul className="passport-history">{historyItems.slice(0, 5).map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul> : <p className="passport-empty">No medical history recorded</p>}</div>
+      {client && <div className="passport-owner"><span>Owner</span><strong>{client.name ?? client.fullName ?? 'Unknown'}</strong></div>}
+    </div>
+  </section>;
 }
 
 function ClientPaymentsPage({ paymentTab, setPaymentTab, authUserId }: { paymentTab: 'all' | 'paid' | 'upcoming' | 'live'; setPaymentTab: (t: 'all' | 'paid' | 'upcoming' | 'live') => void; authUserId: string }) {
